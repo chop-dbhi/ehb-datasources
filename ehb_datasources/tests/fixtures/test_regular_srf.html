@@ -1,0 +1,257 @@
+
+<script type="text/javascript">
+  var cascaded_branch_functions = [];
+
+  //Function to reconstruct form submit post
+  function ajaxFormSubmit(next_form_url,start_url){
+    var form_fields = []
+    dataString = '';
+    $(".field_input").each(function(){
+        var elem = $(this)
+        var elem_type = elem.prop('type')
+        if($.inArray(elem.attr("name"),form_fields)<0){
+            if(elem_type == "checkbox" && elem.attr("checked") == "checked"){
+              dataString = dataString + elem.attr("name") + '=' + '1' +'&'
+            }
+            else if(elem_type == "radio" && elem.attr("checked") == "checked"){
+              dataString = dataString + elem.attr("name") + '=' + encodeURIComponent(elem.val()) +'&'
+            }
+            else if(elem_type == "textarea" ||
+              elem_type == "text" ||
+              elem_type == "hidden"){
+              dataString = dataString + elem.attr("name") + '=' + encodeURIComponent(elem.val()) +"&";
+            }
+            else if(elem_type == "select-one"){
+              $(this).children().each(function(){
+                if($(this).is(':selected')){
+                  dataString = dataString + elem.attr("name") + "=" + encodeURIComponent(elem.val()) + "&";
+                }
+              })
+            }
+        }
+    })
+    $.ajax({
+      type: "POST",
+      url:$(location).attr('pathname'),
+      data: dataString,
+      success: function(data){
+        if(data == 'Parse error. REDCap response is an unknown format. Please contact system administrator.'){
+          $("#pleaseWaitModal").modal('hide');
+          $("#errorModal").modal('show');
+        }
+        else{
+          if(next_form_url != ""){
+            window.location=next_form_url
+          }
+          else{
+            window.location=start_url;
+          }
+          $("#pleaseWaitMsg").html("<p>Form Saved. Generating next form...</p>");
+        }
+      }
+    }
+    )
+  }
+  function clear_hidden_fld_values(eid){
+      var node = document.getElementById(eid);
+      var options = node.getElementsByTagName('option');
+      if(options!=null){
+        for (var i=0; i<options.length; i++){
+          options[i].selected = false;
+        }
+      }
+
+      var selects = node.getElementsByTagName('select');
+      if(selects != null){
+         for(var i = 0; i<selects.length; i++){
+            cascaded_branch_functions.push(selects[i].getAttribute('name'));
+         }
+      }
+
+      var tas = node.getElementsByTagName('textarea');
+      if(tas != null){
+        for(var i=0; i<tas.length; i++){
+          tas[i].value='';
+          cascaded_branch_functions.push(tas[i].getAttribute('name'));
+        }
+      }
+
+      var inputs = node.getElementsByTagName('input');
+      if(inputs != null){
+        for (var i=0; i<inputs.length; i++){
+            this_in = inputs[i];
+            var t = this_in.getAttribute('type');
+            var vt = true;
+            if(t=='checkbox')this_in.checked=false;
+            else if(t=='text')this_in.value='';
+            else if(t=='radio')this_in.checked=false;
+            else vt=false;
+            if(vt){
+              var n = this_in.getAttribute('name');
+              cascaded_branch_functions.push(n);
+            }
+        }
+      }
+  }
+
+  function unique_elements(input){
+    var set = {};
+    for (var i = 0; i<input.length; i++){
+       set[input[i]]=0;
+    }
+    ans = [];
+    for (var item in set) ans.push(item);
+    return ans;
+  }
+
+  function execute_onchange(name){
+     var flds = document.getElementsByName(name);
+     if(flds.length>0){
+        $(flds[0]).trigger('onchange');
+     }
+  }
+
+  function execute_cascaded_branchs(){
+      cascaded_branch_functions = unique_elements(cascaded_branch_functions);
+      var work = true
+      while(work){
+          if(cascaded_branch_functions.length>0){
+             var n = cascaded_branch_functions.shift();
+             execute_onchange(n);
+          }else work = false;
+      }
+  }
+
+   function getFieldValue(fid){
+      var flds = document.getElementsByName(fid);
+      if(flds == null) return undefined;
+      //IE hack to remove elements with id=fid as oppossed to name=fid which is what getEelementsByNAME is suppossed to return
+      flds = $.grep(flds, function(a){if(typeof a.name!='undefined') return true; else return false;});
+      var val = '';
+      if (flds.length==1){
+          var f = flds[0];
+          var nt = f.nodeName.toLowerCase();
+          if(nt == 'input'){
+              var t = f.getAttribute('type')
+              if(t=='checkbox' && f.checked) val = f.getAttribute('value');
+              else if(t=='text') val = f.value;
+              else if(t=='radio' && f.checked)val = f.getAttribute('value');
+          }
+          else if(nt=='option' && f.selected) val = f.getAttribute('value');
+          else if(nt='textarea') val = f.value
+      }
+      else {  //this will handle radio types
+          for(var i=0; i<flds.length; i++){
+             if(flds[i].checked)val = flds[i].getAttribute('value');
+          }
+      }
+      return val;
+    }
+
+  
+
+  
+
+</script>
+
+<table class="table table-bordered table-striped table-condensed"><tr><td> Demographics</td></tr></table>
+            
+
+<table class="table table-bordered table-striped table-condensed">
+                  <tr id="study_id" style="display:notnone">
+                  <td><div>Study ID</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="text" value="1" name="study_id" class="field_input" "/>
+                  </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               <tr><th colspan="2">Demographics Information</th></tr>
+                  <tr id="first_name" style="display:notnone">
+                  <td><div>First Name</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="text" value="Chris" name="first_name" class="field_input" "/>
+                  </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="last_name" style="display:notnone">
+                  <td><div>Last Name</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="text" value="blah blah" name="last_name" class="field_input" "/>
+                  </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="dob" style="display:notnone">
+                  <td><div>Date of Birth</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="text" value="2000-12-31" name="dob" class="field_input" "/>
+                  </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="sex" style="display:notnone">
+                  <td><div>Gender</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><select  name="sex" class="field_input"><option value></option><option value="0"  name="sex___0" class="field_input">Female</option>
+                       <option value="1" selected="selected" name="sex___1" class="field_input">Male</option>
+                       </select>
+                   </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="address" style="display:notnone">
+                  <td><div>Street, City, State, ZIP</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><textarea rows="5" cols="20" name="address" class="field_input" >123 Main Street, Anytown USA 23456</textarea>
+                   </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="phone_number" style="display:notnone">
+                  <td><div>Phone number</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="text" value="(615) 555-1234" name="phone_number" class="field_input" "/>
+                  </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="file" style="display:notnone">
+                  <td><div>File</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div></div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               <tr><th colspan="2">Matrix</th></tr>
+                  <tr id="matrix1" style="display:notnone">
+                  <td><div>Matrix 1</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="radio" class="field_input"  name="matrix1" style="margin-top:-1px" value="1" checked="checked" /> Foo<br/>
+                       <input type="radio" class="field_input"  name="matrix1" style="margin-top:-1px" value="2"  /> Bar<br/>
+                       <input type="radio" class="field_input"  name="matrix1" style="margin-top:-1px" value="3"  /> Bat<br/>
+                       </div><div style="color:blue; font-size:12px;"></div><a class="pull-right radio_reset" href="javascript:void(0)">reset</a></td>
+                  </tr>
+               
+                  <tr id="matrix2" style="display:notnone">
+                  <td><div>Matrix 2</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="radio" class="field_input"  name="matrix2" style="margin-top:-1px" value="1"  /> Foo<br/>
+                       <input type="radio" class="field_input"  name="matrix2" style="margin-top:-1px" value="2" checked="checked" /> Bar<br/>
+                       <input type="radio" class="field_input"  name="matrix2" style="margin-top:-1px" value="3"  /> Bat<br/>
+                       </div><div style="color:blue; font-size:12px;"></div><a class="pull-right radio_reset" href="javascript:void(0)">reset</a></td>
+                  </tr>
+               
+                  <tr id="matrix3" style="display:notnone">
+                  <td><div>Matrix 3</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><input type="radio" class="field_input"  name="matrix3" style="margin-top:-1px" value="1"  /> Foo<br/>
+                       <input type="radio" class="field_input"  name="matrix3" style="margin-top:-1px" value="2"  /> Bar<br/>
+                       <input type="radio" class="field_input"  name="matrix3" style="margin-top:-1px" value="3" checked="checked" /> Bat<br/>
+                       </div><div style="color:blue; font-size:12px;"></div><a class="pull-right radio_reset" href="javascript:void(0)">reset</a></td>
+                  </tr>
+               <tr><th colspan="2">Matrix 2</th></tr>
+                  <tr id="matcheck1" style="display:notnone">
+                  <td><div>Matrix Check 1</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><div><input class="field_input" type="checkbox"  name="matcheck1___1" value="1" style="margin-top:-1px" checked="checked"/> Foo</div>
+                       <div><input class="field_input" type="checkbox"  name="matcheck1___2" value="1" style="margin-top:-1px" checked="checked"/> Bar</div>
+                       <div><input class="field_input" type="checkbox"  name="matcheck1___3" value="1" style="margin-top:-1px" /> Bat</div>
+                       </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="matcheck2" style="display:notnone">
+                  <td><div>Matrix Check 2</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><div><input class="field_input" type="checkbox"  name="matcheck2___1" value="1" style="margin-top:-1px" /> Foo</div>
+                       <div><input class="field_input" type="checkbox"  name="matcheck2___2" value="1" style="margin-top:-1px" checked="checked"/> Bar</div>
+                       <div><input class="field_input" type="checkbox"  name="matcheck2___3" value="1" style="margin-top:-1px" checked="checked"/> Bat</div>
+                       </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               
+                  <tr id="matcheck3" style="display:notnone">
+                  <td><div>Matrix Check 3</div><div style="color:red; font-size:12px;"></div></td>
+                  <td><div><div><input class="field_input" type="checkbox"  name="matcheck3___1" value="1" style="margin-top:-1px" checked="checked"/> Foo</div>
+                       <div><input class="field_input" type="checkbox"  name="matcheck3___2" value="1" style="margin-top:-1px" /> Bar</div>
+                       <div><input class="field_input" type="checkbox"  name="matcheck3___3" value="1" style="margin-top:-1px" checked="checked"/> Bat</div>
+                       </div><div style="color:blue; font-size:12px;"></div></td>
+                  </tr>
+               </table>
