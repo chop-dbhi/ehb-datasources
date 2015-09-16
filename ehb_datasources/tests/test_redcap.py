@@ -4,6 +4,7 @@ from datetime import datetime
 
 from ehb_datasources.drivers.redcap.driver import GenericDriver, ehbDriver
 from ehb_datasources.drivers.redcap.formBuilderJson import FormBuilderJson
+from django.conf import settings
 import json
 import xml.dom.minidom as xml
 
@@ -114,7 +115,7 @@ class TestDriver(unittest.TestCase, RequestResources):
         self.assertEqual(html, fixture)
 
     def test_record_select_form(self):
-
+        settings.configure(DEBUG=True)
         record_urls = ['some_url']
         labels = [{'id': '1', 'label': 'Some label'}]
         er = Mock()
