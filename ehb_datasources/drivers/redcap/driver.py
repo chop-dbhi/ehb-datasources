@@ -736,7 +736,7 @@ class ehbDriver(Driver, GenericDriver):
             record_set = self.get(_format=self.FORMAT_JSON,
                                   records=[er.record_id],
                                   rawResponse=True,
-                                  forms=[form_name]).strip()
+                                  forms=[form_name]).read().strip()
             if len(record_set) > 0:
                 record_set = self.raw_to_json(record_set)
             else:
@@ -754,7 +754,7 @@ class ehbDriver(Driver, GenericDriver):
             temp = self.get(_format=self.FORMAT_JSON,
                             rawResponse=True,
                             records=[er.record_id])
-            record_set = temp.strip()
+            record_set = temp.read().strip()
             if len(record_set) > 0:
                 record_set = self.raw_to_json(record_set)
             else:
