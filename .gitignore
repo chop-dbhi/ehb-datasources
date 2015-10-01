@@ -8,6 +8,5 @@ build
 ehb_datasources/tests/local_settings.py
 resources/
 redcap_test.py
-*.json
 *.egg-info
 .coverage
