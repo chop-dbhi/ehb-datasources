@@ -1,5 +1,7 @@
 # eHB Datasources
 
+[![Circle CI](https://circleci.com/gh/chop-dbhi/ehb-datasources.svg?style=svg)](https://circleci.com/gh/chop-dbhi/ehb-datasources)
+
 eHB Datasources provides a set of drivers or plugins for DBHi's Biorepository Portal (BRP).
 
 There are currently three available drivers for the BRP:
