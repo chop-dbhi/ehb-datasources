@@ -22,7 +22,7 @@ appropriate html element indicating this is restricted should be shown.
 
 eHB Datasources is a dependency of the Biorepository Portal and should be installed in the context of that application.
 
-eHB Datasources does have a dependency on Django for templating. Otherwise, if you'd like to test the package run:
+eHB Datasources does have a dependency on Jinja for templating. Otherwise, if you'd like to test the package run:
 
 `pip install -r requirements.txt`
 
