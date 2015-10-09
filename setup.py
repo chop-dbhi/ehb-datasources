@@ -91,7 +91,7 @@ setup(
     license='GPL',
     keywords='HTTP informatics bioinformatics REDCap',
     url='https://github.com/chop-dbhi/ehb-datasources/',
-    install_requires=[],
+    install_requires=['jinja2>=2'],
     packages=packages,
     cmdclass=cmdclasses,
     data_files=data_files,

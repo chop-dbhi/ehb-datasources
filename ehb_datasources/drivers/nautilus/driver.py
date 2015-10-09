@@ -5,25 +5,13 @@ import logging
 import os
 import urllib
 
-from django.template import Context, Template
-from django.template.loader import get_template
-from django.conf import settings
+from jinja2 import Template
 
 from ehb_datasources.drivers.Base import Driver, RequestHandler
 from ehb_datasources.drivers.exceptions import RecordCreationError, \
     IgnoreEhbExceptions
 
 log = logging.getLogger('ehb')
-
-# Default Django settings to allow us to use the Templating piece.
-try:
-    settings.configure()
-except:
-    pass
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-TEMPLATE_DIR = os.path.join(BASE_DIR, 'nautilus', 'templates')
 
 
 class ehbDriver(Driver, RequestHandler):
@@ -230,21 +218,12 @@ class ehbDriver(Driver, RequestHandler):
 
     def subRecordSelectionForm(self, form_url='', record_id='', *args,
                                **kwargs):
-        t = Template(
-            open(os.path.join(TEMPLATE_DIR, 'sample_print.html'), 'r').read()
-        )
+        tpl = open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'templates/sample_display.html'), 'rb').read()
 
-        actions = [
-            '',
-            'Print Labels for Selected',
-            'Print All available Labels',
-            'Cancel Selected',
-            'Check In Selected',
-            'Add Unscheduled Sample'
-        ]
-        printers = [
-            '',
-        ]
+        t = Template(tpl)
 
         # Grab Info about related aliquots here
         sdg = self.get_sample_data(record_id=record_id)
@@ -254,15 +233,9 @@ class ehbDriver(Driver, RequestHandler):
         except:
             raise
             aliquots = []
-        c = Context({
-            'actions': actions,
-            'printers': printers,
+        c = {
             'aliquots': aliquots,
-            'print_url': kwargs.get('print_url'),
-            'allow_print': kwargs.get('allow_print'),
-            'allow_zpl': kwargs.get('allow_zpl'),
-            'allow_chop_print': kwargs.get('allow_chop_print')
-        })
+        }
         html = t.render(c)
         return html
 
@@ -380,13 +353,11 @@ class ehbDriver(Driver, RequestHandler):
 
     def recordListForm(self, request, record_urls, records, labels, *args,
                        **kwargs):
-        c = Context({'labels': labels})
-        t = Template(
-            open(
-                os.path.join(TEMPLATE_DIR,
-                             'label_edit_modal.html'),
-                'r').read()
-            )
+        tpl = open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'templates/label_edit_modal.html'), 'rb').read()
+        t = Template(tpl)
         rows = ''
         for url, record in zip(record_urls, records):
             r_lbl = 'Sample'
@@ -410,4 +381,4 @@ class ehbDriver(Driver, RequestHandler):
 
         return '<table class="table table-bordered table-striped"><thead>' + \
             '<tr><th>Sample</th><th>Created</th><th>Modified</th></tr>' + \
-            '</thead><tbody>' + rows + '</tbody></table>' + t.render(c)
+            '</thead><tbody>' + rows + '</tbody></table>' + t.render({'labels': labels})

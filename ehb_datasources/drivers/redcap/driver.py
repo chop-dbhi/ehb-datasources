@@ -5,7 +5,7 @@ import urllib
 import xml.dom.minidom as xml
 from xml.parsers.expat import ExpatError
 
-from django.template import Context, Template
+from jinja2 import Template
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
     ImproperArguments
@@ -13,11 +13,6 @@ from ehb_datasources.drivers.Base import Driver, RequestHandler
 from ehb_datasources.drivers.exceptions import RecordDoesNotExist,\
     RecordCreationError
 from ehb_datasources.drivers.redcap.formBuilderJson import FormBuilderJson
-
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-TEMPLATE_DIR = os.path.join(BASE_DIR, 'redcap', 'templates')
 
 
 class GenericDriver(RequestHandler):
@@ -971,11 +966,12 @@ class ehbDriver(Driver, GenericDriver):
     def recordListForm(self, request, record_urls, records, labels,
                        *args, **kwargs):
 
-        c = Context({'labels': labels})
-        t = Template(
-            open(os.path.join(
-                TEMPLATE_DIR, 'label_edit_modal.html'
-            ), 'r').read())
+        tpl = open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'templates/label_edit_modal.html'), 'rb').read()
+
+        t = Template(tpl)
 
         rows = ''
         for url, record in zip(record_urls, records):
@@ -1000,4 +996,4 @@ class ehbDriver(Driver, GenericDriver):
 
         return ('<table class="table table-bordered table-striped"><thead>' +
                 '<tr><th>Record</th><th>Created</th><th>Modified</th></tr>' +
-                '</thead><tbody>' + rows + '</tbody></table>' + t.render(c))
+                '</thead><tbody>' + rows + '</tbody></table>' + t.render({'labels': labels}))
