@@ -14,6 +14,11 @@ from ehb_datasources.drivers.exceptions import RecordDoesNotExist,\
     RecordCreationError
 from ehb_datasources.drivers.redcap.formBuilderJson import FormBuilderJson
 
+LBL_EDIT_MODAL_TEMPLATE = Template(
+    open(os.path.join(
+        os.path.dirname(__file__),
+        'templates/label_edit_modal.html'), 'rb').read())
+
 
 class GenericDriver(RequestHandler):
     '''
@@ -963,23 +968,16 @@ class ehbDriver(Driver, GenericDriver):
             return ['Parse error. REDCap response is an unknown format.' +
                     ' Please contact system administrator.']
 
-    def recordListForm(self, request, record_urls, records, labels,
+    def recordListForm(self, record_urls, records, labels,
                        *args, **kwargs):
-
-        tpl = open(
-            os.path.join(
-                os.path.dirname(__file__),
-                'templates/label_edit_modal.html'), 'rb').read()
-
-        t = Template(tpl)
 
         rows = ''
         for url, record in zip(record_urls, records):
             r_lbl = 'Record'
             for label in labels:
                 if (
-                    record.label_id == str(label['id']) and
-                    record.label_id != '1'
+                    record['label'] == label['id'] and
+                    record['label'] != 1
                 ):
                     r_lbl = label['label']
             rows += ('<tr><td><a href="{url}"><span id="{id}_label">{label}' +
@@ -989,11 +987,12 @@ class ehbDriver(Driver, GenericDriver):
                      '<td>{created}</td><td>{modified}</td></tr>').format(
                 url=url,
                 label=r_lbl,
-                id=record.id,
-                created=record.created.strftime('%B %d, %Y %H:%M:%S'),
-                modified=record.modified.strftime('%B %d, %Y %H:%M:%S')
+                id=record['id'],
+                created=record['created'],
+                modified=record['modified']
             )
 
         return ('<table class="table table-bordered table-striped"><thead>' +
                 '<tr><th>Record</th><th>Created</th><th>Modified</th></tr>' +
-                '</thead><tbody>' + rows + '</tbody></table>' + t.render({'labels': labels}))
+                '</thead><tbody>' + rows + '</tbody></table>' +
+                LBL_EDIT_MODAL_TEMPLATE.render({'labels': labels}))

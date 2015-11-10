@@ -13,6 +13,11 @@ from ehb_datasources.drivers.exceptions import RecordCreationError, \
 
 log = logging.getLogger('ehb')
 
+LBL_EDIT_MODAL_TEMPLATE = Template(
+    open(os.path.join(
+        os.path.dirname(__file__),
+        'templates/label_edit_modal.html'), 'rb').read())
+
 
 class ehbDriver(Driver, RequestHandler):
 
@@ -160,8 +165,10 @@ class ehbDriver(Driver, RequestHandler):
             'BMCL': 'Bone Marrow Cells',
             'BMRC': 'Bone Marrow Cells - Right',
             'BSWB': 'Buccal Swab',
-            'PLAS': 'Plasma'
-        }
+            'PLAS': 'Plasma',
+            'PLF': 'Pleural Fluid',
+            'PHC': 'Apheresis Cells'
+         }
         secondary_type_map = {
             'CELC': 'Cell Culture',
             'FFRZ': 'Flash Frozen',
@@ -351,20 +358,15 @@ class ehbDriver(Driver, RequestHandler):
                                           record_id=None,
                                           cause='Subject ID is required')
 
-    def recordListForm(self, request, record_urls, records, labels, *args,
+    def recordListForm(self, record_urls, records, labels, *args,
                        **kwargs):
-        tpl = open(
-            os.path.join(
-                os.path.dirname(__file__),
-                'templates/label_edit_modal.html'), 'rb').read()
-        t = Template(tpl)
         rows = ''
         for url, record in zip(record_urls, records):
             r_lbl = 'Sample'
             for label in labels:
                 if (
-                    record.label_id == str(label['id']) and
-                    record.label_id != '1'
+                    record['label'] == label['id'] and
+                    record['label'] != 1
                 ):
                     r_lbl = label['label']
             rows += ('<tr><td><a href="{url}"><span id="{id}_label">{label}' +
@@ -374,11 +376,12 @@ class ehbDriver(Driver, RequestHandler):
                      '<td>{created}</td><td>{modified}</td></tr>').format(
                 url=url,
                 label=r_lbl,
-                id=record.id,
-                created=record.created.strftime('%B %d, %Y %H:%M:%S'),
-                modified=record.modified.strftime('%B %d, %Y %H:%M:%S')
+                id=record['id'],
+                created=record['created'],
+                modified=record['modified']
             )
 
-        return '<table class="table table-bordered table-striped"><thead>' + \
-            '<tr><th>Sample</th><th>Created</th><th>Modified</th></tr>' + \
-            '</thead><tbody>' + rows + '</tbody></table>' + t.render({'labels': labels})
+        return ('<table class="table table-bordered table-striped"><thead>' +
+                '<tr><th>Sample</th><th>Created</th><th>Modified</th></tr>' +
+                '</thead><tbody>' + rows + '</tbody></table>' +
+                LBL_EDIT_MODAL_TEMPLATE.render({'labels': labels}))

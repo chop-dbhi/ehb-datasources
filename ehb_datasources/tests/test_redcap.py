@@ -52,6 +52,16 @@ class TestDriver(unittest.TestCase, RequestResources):
             },
             "record_id_field_name": "study_id"
         }'''
+        self.external_record = {
+            'id': 1,
+            'subject': 1,
+            'external_system': 1,
+            'record_id': '100001',
+            'path': 'test_path',
+            'label': 1,
+            'created': 'January 01, 2000 00:00:00',
+            'modified': 'January 02, 2000 00:00:00'
+        }
 
     def test_configure_regular(self):
         self.assertEqual(self.driver.form_names, None)
@@ -116,17 +126,12 @@ class TestDriver(unittest.TestCase, RequestResources):
     def test_record_select_form(self):
         record_urls = ['some_url']
         labels = [{'id': '1', 'label': 'Some label'}]
-        er = Mock()
-        er.id = '1'
-        er.record_label = '1'
-        er.created = datetime(2000, 1, 1)
-        er.modified = datetime(2000, 1, 2)
-        records = [er]
+        records = [self.external_record]
         fixture = open(os.path.join(
             os.path.dirname(__file__),
             'fixtures/record_list.html'), 'r').read()
 
-        html = self.driver.recordListForm(None, record_urls, records, labels)
+        html = self.driver.recordListForm(record_urls, records, labels)
         self.assertEqual(fixture.strip(), html.strip())
 
 if __name__ == '__main__':
