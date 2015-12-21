@@ -10,10 +10,10 @@
         var elem = $(this)
         var elem_type = elem.prop('type')
         if($.inArray(elem.attr("name"),form_fields)<0){
-            if(elem_type == "checkbox" && elem.attr("checked") == "checked"){
+            if(elem_type == "checkbox" && elem.prop("checked") == true){
               dataString = dataString + elem.attr("name") + '=' + '1' +'&'
             }
-            else if(elem_type == "radio" && elem.attr("checked") == "checked"){
+            else if(elem_type == "radio" && elem.prop("checked") == true){
               dataString = dataString + elem.attr("name") + '=' + encodeURIComponent(elem.val()) +'&'
             }
             else if(elem_type == "textarea" ||
