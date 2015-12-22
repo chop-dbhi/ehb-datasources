@@ -85,14 +85,16 @@ class ehbDriver(Driver, RequestHandler):
                 submitted to http://naurest.com/api/sample and the proper
                 value for this input is 'sample'
         '''
-        fldvals = json.dumps(kwargs.get('fldvals', {}))
+        fldvals = kwargs.get('fldvals', {})
         nau_sub_path = kwargs.get('nau_sub_path', '')
         rec_key, rec_id = self.find_nau_elem_identifier(kwargs)
-        body = '[{"{0}":"{1}", "fldvals":{2}}]'.format(
-            rec_key,
-            rec_id,
-            fldvals
-        )
+        body = [
+            {
+                rec_key: rec_id,
+                "fldvals": fldvals
+            }
+        ]
+        body = json.dumps(body)
         nau_creds = self.encode_nau_creds()
         headers = {
             'Accept': 'application/json',
