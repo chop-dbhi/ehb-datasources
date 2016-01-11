@@ -8,7 +8,7 @@
 		<tbody>
 					{% for alq in aliquots %}
 					<tr>
-						<td>{{alq.label}}{% if alq.is_received %}<small class="text-muted"> <small class="text-muted"> -- Collected On: {{alq.U_COLLECT_DATE_TIME}} -- Received On: {{alq.U_RECEIVED_DATE_TIME}}</small>{% endif %}<span class="label label-primary pull-right muted">{{alq.NAME}}</span></td><td align="center">{{alq.STATUS|safe}}</td>
+						<td>{{alq.label}}{% if alq.is_received %}<small class="text-muted"> <small style="font-size:1em"> -- Collected On: {{alq.U_COLLECT_DATE_TIME}} -- Received On: {{alq.U_RECEIVED_DATE_TIME}}</small>{% endif %}<span class="label label-primary pull-right muted">{{alq.NAME}}</span></td><td align="center">{{alq.STATUS|safe}}</td>
 					</tr>
 					{% endfor %}
 		</tbody>
