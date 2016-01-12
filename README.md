@@ -4,11 +4,12 @@
 
 eHB Datasources provides a set of drivers or plugins for DBHi's Biorepository Portal (BRP).
 
-There are currently three available drivers for the BRP:
+There are currently four available drivers for the BRP:
 
 * REDCap
 * ThermoFisher's Nautilus
 * DBHi's Phenotype Capture Application
+* External Identifier Management (No external system interaction)
 
 BRP drivers provide an interface to the eHB. Drivers should generate HTML to facilitate the creation and update of records in external systems. Drivers should have the following HTML generating functions:
 
