@@ -1,12 +1,107 @@
 
 <script type="text/javascript">
+  $(function() {
+    $( ".field_input_date" ).datepicker({
+            format: 'yyyy-mm-dd'
+        });
+  });
+
+  $(function () {
+    $(".todaybutton").on('click', function () {
+        var btnid=$(this).attr('id')
+        var textid=btnid.replace('datebtn_','')+'_input'
+        var textField = $('#'+textid)[0];
+        var today = new Date();
+        var monthstr = today.getMonth()+1
+        if (monthstr < 10) {
+            monthstr = '0' + monthstr
+        }
+        var datestr = today.getDate()
+        if (datestr < 10) {
+            datestr = '0' + datestr
+        }
+        var todaystr = today.getFullYear() + "-" + monthstr + "-" + datestr;
+        textField.value=todaystr;
+    });
+  });
+
+  function valiDate(field) {
+      var parts, day, month, year;
+      var dateField = document.getElementById(field);
+      var dateStr = dateField.value;
+
+      if (dateStr == "") {
+          return true;
+      }
+
+      // Part 1: check for the expected format without validating the #s:
+      if(!/^\d{4}\-\d{1,2}\-\d{1,2}$/.test(dateStr)) {
+         // format is not as expected, but is it a variation we can auto-fix?
+         if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
+             // date-delimiter '/' used instead of '-', auto-fix:
+             dateStr = dateStr.replace(/\//g,'-');
+             alert("Changing YYYY/MM/DD to YYYY-MM-DD, now: "+dateStr);
+             dateField.value=dateStr;
+         }
+         else if (/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/.test(dateStr)){
+             // MM[-/]DD[-/]YYYY possibly used instead, auto-fix:
+             parts   = dateStr.split(/[-\/]/);
+             dateStr = parts[2]+"-"+parts[0]+"-"+parts[1];
+             alert("Changing possible MM-DD-YYYY to YYYY-MM-DD, now: "+dateStr);
+             dateField.value=dateStr;
+         }
+         else {
+             alert("Expecting YYYY-MM-DD date format.  Unexpected date format found with: "+dateStr);
+             return false;
+         }
+      }
+
+      // Part 2: now that all seems to be YYYY-MM-DD format, validate MM&DD #s:
+      parts   = dateStr.split(/-/);
+      year    = parseInt(parts[0], 10);
+      month   = parseInt(parts[1], 10);
+      day     = parseInt(parts[2], 10);
+
+      if(month <= 0 || month > 12)
+      {
+          // be aware of the possible YYYY-DD-MM date<->month switcheroo:
+          if (day >0 && day <= 12 && month >0 && month <= 31) {
+              var switcheroo = month
+              month = day
+              day = switcheroo
+              dateStr = year.toString()+"-"+month.toString()+"-"+day.toString();
+              alert("Swapping possible YYYY-DD-MM to YYYY-MM-DD, now: "+dateStr);
+              dateField.value=dateStr;
+          }
+          else {
+              alert("Month does not validate. Please update your date for: "+dateStr);
+              return false;
+          }
+      }
+
+      var monthLength = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
+
+      // Adjust for leap years
+      if(year % 400 == 0 || (year % 100 != 0 && year % 4 == 0))
+      {
+          monthLength[1] = 29;
+      }
+
+      if (day <= 0 || day > monthLength[month - 1]) {
+          alert("Day of month does not validate. Please update your date for: "+dateStr);
+          return false;
+      }
+
+      return true;
+  }
+
   var cascaded_branch_functions = [];
 
   //Function to reconstruct form submit post
   function ajaxFormSubmit(next_form_url,start_url){
     var form_fields = []
     dataString = '';
-    $(".field_input").each(function(){
+    $(".field_input, .field_input_date").each(function(){
         var elem = $(this)
         var elem_type = elem.prop('type')
         if($.inArray(elem.attr("name"),form_fields)<0){
@@ -160,25 +255,26 @@
 <table class="table table-bordered table-striped table-condensed">
                   <tr id="study_id" style="display:notnone">
                   <td><div>Study ID</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="1" name="study_id" class="field_input" "/>
+                  <td><div><input type="text" value="1" name="study_id" class="field_input" id="study_id_input"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                <tr><th colspan="2">Demographics Information</th></tr>
                   <tr id="first_name" style="display:notnone">
                   <td><div>First Name</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="Chris" name="first_name" class="field_input" "/>
+                  <td><div><input type="text" value="Chris" name="first_name" class="field_input" id="first_name_input"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
                   <tr id="last_name" style="display:notnone">
                   <td><div>Last Name</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="blah blah" name="last_name" class="field_input" "/>
+                  <td><div><input type="text" value="blah blah" name="last_name" class="field_input" id="last_name_input"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
                   <tr id="dob" style="display:notnone">
                   <td><div>Date of Birth</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="2000-12-31" name="dob" class="field_input" "/>
+                  <td><div><input type="text" value="2000-12-31" name="dob" class="field_input_date" id="dob_input"  onblur="valiDate('dob_input');"  /><input type="button" value="Today" class="todaybutton" id="datebtn_dob" />
+                             
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
@@ -198,7 +294,7 @@
                
                   <tr id="phone_number" style="display:notnone">
                   <td><div>Phone number</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="(615) 555-1234" name="phone_number" class="field_input" "/>
+                  <td><div><input type="text" value="(615) 555-1234" name="phone_number" class="field_input" id="phone_number_input"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                

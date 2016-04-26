@@ -66,13 +66,108 @@ class FormBuilderJson(object):
             meta, record_set, form_name, event_num, unique_event_names, event_labels)
         html = redcapTemplate("""
 <script type="text/javascript">
+  $(function() {
+    $( ".field_input_date" ).datepicker({
+            format: 'yyyy-mm-dd'
+        });
+  });
+
+  $(function () {
+    $(".todaybutton").on('click', function () {
+        var btnid=$(this).attr('id')
+        var textid=btnid.replace('datebtn_','')+'_input'
+        var textField = $('#'+textid)[0];
+        var today = new Date();
+        var monthstr = today.getMonth()+1
+        if (monthstr < 10) {
+            monthstr = '0' + monthstr
+        }
+        var datestr = today.getDate()
+        if (datestr < 10) {
+            datestr = '0' + datestr
+        }
+        var todaystr = today.getFullYear() + "-" + monthstr + "-" + datestr;
+        textField.value=todaystr;
+    });
+  });
+
+  function valiDate(field) {
+      var parts, day, month, year;
+      var dateField = document.getElementById(field);
+      var dateStr = dateField.value;
+
+      if (dateStr == "") {
+          return true;
+      }
+
+      // Part 1: check for the expected format without validating the #s:
+      if(!/^^\d{4}\-\d{1,2}\-\d{1,2}$/.test(dateStr)) {
+         // format is not as expected, but is it a variation we can auto-fix?
+         if(/^^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
+             // date-delimiter '/' used instead of '-', auto-fix:
+             dateStr = dateStr.replace(/\//g,'-');
+             alert("Changing YYYY/MM/DD to YYYY-MM-DD, now: "+dateStr);
+             dateField.value=dateStr;
+         }
+         else if (/^^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/.test(dateStr)){
+             // MM[-/]DD[-/]YYYY possibly used instead, auto-fix:
+             parts   = dateStr.split(/[-\/]/);
+             dateStr = parts[2]+"-"+parts[0]+"-"+parts[1];
+             alert("Changing possible MM-DD-YYYY to YYYY-MM-DD, now: "+dateStr);
+             dateField.value=dateStr;
+         }
+         else {
+             alert("Expecting YYYY-MM-DD date format.  Unexpected date format found with: "+dateStr);
+             return false;
+         }
+      }
+
+      // Part 2: now that all seems to be YYYY-MM-DD format, validate MM&DD #s:
+      parts   = dateStr.split(/-/);
+      year    = parseInt(parts[0], 10);
+      month   = parseInt(parts[1], 10);
+      day     = parseInt(parts[2], 10);
+
+      if(month <= 0 || month > 12)
+      {
+          // be aware of the possible YYYY-DD-MM date<->month switcheroo:
+          if (day >0 && day <= 12 && month >0 && month <= 31) {
+              var switcheroo = month
+              month = day
+              day = switcheroo
+              dateStr = year.toString()+"-"+month.toString()+"-"+day.toString();
+              alert("Swapping possible YYYY-DD-MM to YYYY-MM-DD, now: "+dateStr);
+              dateField.value=dateStr;
+          }
+          else {
+              alert("Month does not validate. Please update your date for: "+dateStr);
+              return false;
+          }
+      }
+
+      var monthLength = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
+
+      // Adjust for leap years
+      if(year % 400 == 0 || (year % 100 != 0 && year % 4 == 0))
+      {
+          monthLength[1] = 29;
+      }
+
+      if (day <= 0 || day > monthLength[month - 1]) {
+          alert("Day of month does not validate. Please update your date for: "+dateStr);
+          return false;
+      }
+
+      return true;
+  }
+
   var cascaded_branch_functions = [];
 
   //Function to reconstruct form submit post
   function ajaxFormSubmit(next_form_url,start_url){
     var form_fields = []
     dataString = '';
-    $(".field_input").each(function(){
+    $(".field_input, .field_input_date").each(function(){
         var elem = $(this)
         var elem_type = elem.prop('type')
         if($.inArray(elem.attr("name"),form_fields)<0){
@@ -292,8 +387,16 @@ class FormBuilderJson(object):
             onchange = ''
         if ft == 'text':
             ffi[name]={'type':ft}
-            return """<input type="text" value="{0}" name="{1}" class="field_input" {2}"/>
-                  """.format(value, name, onchange)
+            field_class="field_input"
+            text_field_id=field.get('field_name')+"_input"
+            today_button=""
+            if field.get('text_validation_type_or_show_slider_number') == 'date_ymd':
+                field_class="field_input_date"
+                today_button="""<input type="button" value="Today" class="todaybutton" id="datebtn_{0}" />
+                             """.format(field.get('field_name'))
+                onchange += """ onblur="valiDate('{0}');" """.format(text_field_id)
+            return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />{5}
+                  """.format(value, name, field_class, text_field_id, onchange, today_button)
         elif ft == 'notes':
             ffi[name]={'type':ft}
             return """<textarea rows="5" cols="20" name="{0}" class="field_input" {1}>{2}</textarea>
