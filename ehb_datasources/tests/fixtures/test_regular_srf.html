@@ -6,29 +6,51 @@
         });
   });
 
+  $(function() {
+    $( ".field_input_date" ).datepicker()
+        .on('changeDate', function(ev){
+            $(this).datepicker('hide');
+            // and clear out any existing warnings:
+            var textid = $(this).attr('id');
+            var datespanid = textid.replace('dateinput_', 'datespan_');
+            var datespanEl = $('#' + datespanid)[0];
+            datespanEl.innerHTML = "";
+        });
+  });
+
   $(function () {
     $(".todaybutton").on('click', function () {
-        var btnid=$(this).attr('id')
-        var textid=btnid.replace('datebtn_','')+'_input'
-        var textField = $('#'+textid)[0];
+        var btnid = $(this).attr('id');
+        var textid = btnid.replace('datebtn_', 'dateinput_');
+        var textField = $('#' + textid)[0];
+
         var today = new Date();
-        var monthstr = today.getMonth()+1
+        var monthstr = today.getMonth() + 1;
         if (monthstr < 10) {
-            monthstr = '0' + monthstr
+            monthstr = '0' + monthstr;
         }
-        var datestr = today.getDate()
+        var datestr = today.getDate();
         if (datestr < 10) {
-            datestr = '0' + datestr
+            datestr = '0' + datestr;
         }
         var todaystr = today.getFullYear() + "-" + monthstr + "-" + datestr;
-        textField.value=todaystr;
+        textField.value = todaystr;
+
+        // and clear out any existing warnings:
+        var datespanid = btnid.replace('datebtn_', 'datespan_');
+        var datespanEl = $('#' + datespanid)[0];
+        datespanEl.innerHTML = "";
     });
   });
 
-  function valiDate(field) {
+  function valiDate(dateFieldId, datespanFieldId) {
       var parts, day, month, year;
-      var dateField = document.getElementById(field);
+      var dateField = document.getElementById(dateFieldId);
       var dateStr = dateField.value;
+
+      // clear out any existing warnings:
+      var datespanEl = document.getElementById(datespanFieldId);
+      datespanEl.innerHTML = "";
 
       if (dateStr == "") {
           return true;
@@ -39,19 +61,17 @@
          // format is not as expected, but is it a variation we can auto-fix?
          if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
              // date-delimiter '/' used instead of '-', auto-fix:
-             dateStr = dateStr.replace(/\//g,'-');
-             alert("Changing YYYY/MM/DD to YYYY-MM-DD, now: "+dateStr);
-             dateField.value=dateStr;
+             dateStr = dateStr.replace(/\//g, '-');
+             dateField.value = dateStr;
          }
          else if (/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/.test(dateStr)){
              // MM[-/]DD[-/]YYYY possibly used instead, auto-fix:
              parts   = dateStr.split(/[-\/]/);
-             dateStr = parts[2]+"-"+parts[0]+"-"+parts[1];
-             alert("Changing possible MM-DD-YYYY to YYYY-MM-DD, now: "+dateStr);
-             dateField.value=dateStr;
+             dateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
+             dateField.value = dateStr;
          }
          else {
-             alert("Expecting YYYY-MM-DD date format.  Unexpected date format found with: "+dateStr);
+             datespanEl.innerHTML = "ERROR: Expecting YYYY-MM-DD date format";
              return false;
          }
       }
@@ -64,19 +84,8 @@
 
       if(month <= 0 || month > 12)
       {
-          // be aware of the possible YYYY-DD-MM date<->month switcheroo:
-          if (day >0 && day <= 12 && month >0 && month <= 31) {
-              var switcheroo = month
-              month = day
-              day = switcheroo
-              dateStr = year.toString()+"-"+month.toString()+"-"+day.toString();
-              alert("Swapping possible YYYY-DD-MM to YYYY-MM-DD, now: "+dateStr);
-              dateField.value=dateStr;
-          }
-          else {
-              alert("Month does not validate. Please update your date for: "+dateStr);
-              return false;
-          }
+          datespanEl.innerHTML = "ERROR: month does not validate for YYYY-MM-DD";
+          return false;
       }
 
       var monthLength = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
@@ -88,7 +97,7 @@
       }
 
       if (day <= 0 || day > monthLength[month - 1]) {
-          alert("Day of month does not validate. Please update your date for: "+dateStr);
+          datespanEl.innerHTML = "ERROR: day of month does not validate for YYYY-MM-DD";
           return false;
       }
 
@@ -255,26 +264,26 @@
 <table class="table table-bordered table-striped table-condensed">
                   <tr id="study_id" style="display:notnone">
                   <td><div>Study ID</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="1" name="study_id" class="field_input" id="study_id_input"  />
+                  <td><div><input type="text" value="1" name="study_id" class="field_input" id="input_study_id"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                <tr><th colspan="2">Demographics Information</th></tr>
                   <tr id="first_name" style="display:notnone">
                   <td><div>First Name</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="Chris" name="first_name" class="field_input" id="first_name_input"  />
+                  <td><div><input type="text" value="Chris" name="first_name" class="field_input" id="input_first_name"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
                   <tr id="last_name" style="display:notnone">
                   <td><div>Last Name</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="blah blah" name="last_name" class="field_input" id="last_name_input"  />
+                  <td><div><input type="text" value="blah blah" name="last_name" class="field_input" id="input_last_name"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
                   <tr id="dob" style="display:notnone">
                   <td><div>Date of Birth</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="2000-12-31" name="dob" class="field_input_date" id="dob_input"  onblur="valiDate('dob_input');"  /><input type="button" value="Today" class="todaybutton" id="datebtn_dob" />
-                             
+                  <td><div><input type="text" value="2000-12-31" name="dob" class="field_input_date" id="dateinput_dob"  onblur="valiDate('dateinput_dob','datespan_dob');"  /><input type="button" value="Today" class="todaybutton" id="datebtn_dob" /> <br/>
+                             <span style="color:red" class="datespan" id="datespan_dob"></span>
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
@@ -294,7 +303,7 @@
                
                   <tr id="phone_number" style="display:notnone">
                   <td><div>Phone number</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="(615) 555-1234" name="phone_number" class="field_input" id="phone_number_input"  />
+                  <td><div><input type="text" value="(615) 555-1234" name="phone_number" class="field_input" id="input_phone_number"  />
                   </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
