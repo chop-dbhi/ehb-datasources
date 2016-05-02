@@ -72,29 +72,51 @@ class FormBuilderJson(object):
         });
   });
 
+  $(function() {
+    $( ".field_input_date" ).datepicker()
+        .on('changeDate', function(ev){
+            $(this).datepicker('hide');
+            // and clear out any existing warnings:
+            var textid = $(this).attr('id');
+            var datespanid = textid.replace('dateinput_', 'datespan_');
+            var datespanEl = $('#' + datespanid)[0];
+            datespanEl.innerHTML = "";
+        });
+  });
+
   $(function () {
     $(".todaybutton").on('click', function () {
-        var btnid=$(this).attr('id')
-        var textid=btnid.replace('datebtn_','')+'_input'
-        var textField = $('#'+textid)[0];
+        var btnid = $(this).attr('id');
+        var textid = btnid.replace('datebtn_', 'dateinput_');
+        var textField = $('#' + textid)[0];
+
         var today = new Date();
-        var monthstr = today.getMonth()+1
+        var monthstr = today.getMonth() + 1;
         if (monthstr < 10) {
-            monthstr = '0' + monthstr
+            monthstr = '0' + monthstr;
         }
-        var datestr = today.getDate()
+        var datestr = today.getDate();
         if (datestr < 10) {
-            datestr = '0' + datestr
+            datestr = '0' + datestr;
         }
         var todaystr = today.getFullYear() + "-" + monthstr + "-" + datestr;
-        textField.value=todaystr;
+        textField.value = todaystr;
+
+        // and clear out any existing warnings:
+        var datespanid = btnid.replace('datebtn_', 'datespan_');
+        var datespanEl = $('#' + datespanid)[0];
+        datespanEl.innerHTML = "";
     });
   });
 
-  function valiDate(field) {
+  function valiDate(dateFieldId, datespanFieldId) {
       var parts, day, month, year;
-      var dateField = document.getElementById(field);
+      var dateField = document.getElementById(dateFieldId);
       var dateStr = dateField.value;
+
+      // clear out any existing warnings:
+      var datespanEl = document.getElementById(datespanFieldId);
+      datespanEl.innerHTML = "";
 
       if (dateStr == "") {
           return true;
@@ -105,19 +127,17 @@ class FormBuilderJson(object):
          // format is not as expected, but is it a variation we can auto-fix?
          if(/^^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
              // date-delimiter '/' used instead of '-', auto-fix:
-             dateStr = dateStr.replace(/\//g,'-');
-             alert("Changing YYYY/MM/DD to YYYY-MM-DD, now: "+dateStr);
-             dateField.value=dateStr;
+             dateStr = dateStr.replace(/\//g, '-');
+             dateField.value = dateStr;
          }
          else if (/^^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/.test(dateStr)){
              // MM[-/]DD[-/]YYYY possibly used instead, auto-fix:
              parts   = dateStr.split(/[-\/]/);
-             dateStr = parts[2]+"-"+parts[0]+"-"+parts[1];
-             alert("Changing possible MM-DD-YYYY to YYYY-MM-DD, now: "+dateStr);
-             dateField.value=dateStr;
+             dateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
+             dateField.value = dateStr;
          }
          else {
-             alert("Expecting YYYY-MM-DD date format.  Unexpected date format found with: "+dateStr);
+             datespanEl.innerHTML = "ERROR: Expecting YYYY-MM-DD date format";
              return false;
          }
       }
@@ -130,19 +150,8 @@ class FormBuilderJson(object):
 
       if(month <= 0 || month > 12)
       {
-          // be aware of the possible YYYY-DD-MM date<->month switcheroo:
-          if (day >0 && day <= 12 && month >0 && month <= 31) {
-              var switcheroo = month
-              month = day
-              day = switcheroo
-              dateStr = year.toString()+"-"+month.toString()+"-"+day.toString();
-              alert("Swapping possible YYYY-DD-MM to YYYY-MM-DD, now: "+dateStr);
-              dateField.value=dateStr;
-          }
-          else {
-              alert("Month does not validate. Please update your date for: "+dateStr);
-              return false;
-          }
+          datespanEl.innerHTML = "ERROR: month does not validate for YYYY-MM-DD";
+          return false;
       }
 
       var monthLength = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
@@ -154,7 +163,7 @@ class FormBuilderJson(object):
       }
 
       if (day <= 0 || day > monthLength[month - 1]) {
-          alert("Day of month does not validate. Please update your date for: "+dateStr);
+          datespanEl.innerHTML = "ERROR: day of month does not validate for YYYY-MM-DD";
           return false;
       }
 
@@ -388,13 +397,14 @@ class FormBuilderJson(object):
         if ft == 'text':
             ffi[name]={'type':ft}
             field_class="field_input"
-            text_field_id=field.get('field_name')+"_input"
+            text_field_id="input_"+field.get('field_name')
             today_button=""
             if field.get('text_validation_type_or_show_slider_number') == 'date_ymd':
                 field_class="field_input_date"
-                today_button="""<input type="button" value="Today" class="todaybutton" id="datebtn_{0}" />
-                             """.format(field.get('field_name'))
-                onchange += """ onblur="valiDate('{0}');" """.format(text_field_id)
+                text_field_id="date"+text_field_id
+                today_button="""<input type="button" value="Today" class="todaybutton" id="datebtn_{0}" /> <br/>
+                             <span style="color:red" class="datespan" id="datespan_{0}"></span>""".format(field.get('field_name'))
+                onchange += """ onblur="valiDate('{0}','datespan_{1}');" """.format(text_field_id, field.get('field_name'))
             return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />{5}
                   """.format(value, name, field_class, text_field_id, onchange, today_button)
         elif ft == 'notes':
