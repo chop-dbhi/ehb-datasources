@@ -109,14 +109,20 @@ class FormBuilderJson(object):
     });
   });
 
-  function valiDate(dateFieldId, datespanFieldId) {
+  $(function () {
+    $(".field_input_date").on('blur', function () {
+      // valiDate() function:
       var parts, day, month, year;
-      var dateField = document.getElementById(dateFieldId);
+      var dateField = $(this)[0];
       var dateStr = dateField.value;
 
       // clear out any existing warnings:
-      var datespanEl = document.getElementById(datespanFieldId);
+      var textid = $(this).attr('id');
+      var datespanid = textid.replace('dateinput_', 'datespan_');
+      var datespanEl = document.getElementById(datespanid);
       datespanEl.innerHTML = "";
+      // and the datepicker:
+      $(this).datepicker('hide');
 
       if (dateStr == "") {
           return true;
@@ -168,7 +174,9 @@ class FormBuilderJson(object):
       }
 
       return true;
-  }
+    });
+  });
+
 
   var cascaded_branch_functions = [];
 
@@ -404,7 +412,6 @@ class FormBuilderJson(object):
                 text_field_id="date"+text_field_id
                 today_button="""<input type="button" value="Today" class="todaybutton" id="datebtn_{0}" /> <br/>
                              <span style="color:red" class="datespan" id="datespan_{0}"></span>""".format(field.get('field_name'))
-                onchange += """ onblur="valiDate('{0}','datespan_{1}');" """.format(text_field_id, field.get('field_name'))
             return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />{5}
                   """.format(value, name, field_class, text_field_id, onchange, today_button)
         elif ft == 'notes':
