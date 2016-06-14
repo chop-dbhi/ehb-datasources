@@ -295,7 +295,7 @@ class ehbDriver(Driver, RequestHandler):
         new record or None if no information is needed from the user to
         generate a new record.
         '''
-        fld_sdg_name = '<input type="password" ' + \
+        fld_sdg_name = '<input type="text" ' + \
             'onkeypress="return disableEnter(event);" name="' + \
             self.FORM_SDG_NAME + '"'
 
