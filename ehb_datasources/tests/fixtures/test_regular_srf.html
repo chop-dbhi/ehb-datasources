@@ -43,6 +43,21 @@
     });
   });
 
+  function postTimeoutDateHider(preThis) {
+      // When we have have tabbed out of an INPUT field with class=field_input_date,
+      // then the setTimeout will call this function with the previously active $(this).
+      // If the newly active element is an INPUT field not of the field_input_date class,
+      // (and noting that field_input_dates will not be direct neighbors due to a today_button with class=btn_today)
+      // then go ahead and hide the previous element's datepicker.
+      // Clicking anywhere else (e.g., element of type BODY) will automatically
+      // invoke the datepicker's own 'hide' functionality.
+
+      var active = document.activeElement;
+      if (active.tagName == 'INPUT' && active.getAttribute('class') !== 'field_input_date') {
+          preThis.datepicker('hide');
+      }
+  }
+
   $(function () {
     $(".field_input_date").on('blur', function () {
       // valiDate() function:
@@ -56,7 +71,7 @@
       var datespanEl = document.getElementById(datespanid);
       datespanEl.innerHTML = "";
       // and the datepicker:
-      $(this).datepicker('hide');
+      setTimeout(postTimeoutDateHider.bind(null, $(this)), 1);
 
       if (dateStr == "") {
           return true;
