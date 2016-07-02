@@ -1,21 +1,21 @@
 
 <script type="text/javascript">
-  $(function() {
-    $( ".field_input_date" ).datepicker({
-            format: 'yyyy-mm-dd'
-        });
-  });
 
   $(function() {
-    $( ".field_input_date" ).datepicker()
-        .on('changeDate', function(ev){
-            $(this).datepicker('hide');
-            // and clear out any existing warnings:
-            var textid = $(this).attr('id');
-            var datespanid = textid.replace('dateinput_', 'datespan_');
-            var datespanEl = $('#' + datespanid)[0];
-            datespanEl.innerHTML = "";
-        });
+    $('.date-field .input-group.date').datepicker({
+      autoclose: true,
+      format: 'yyyy-mm-dd',
+      container: '.date-field',
+      keyboardNavigation: false,
+      showOnFocus: false,
+    }).on('changeDate', function(ev){
+        $(this).datepicker('hide');
+        // and clear out any existing warnings:
+        var textid = $(this).children('input').attr('id');
+        var datespanid = textid.replace('dateinput_', 'datespan_');
+        var datespanEl = $('#' + datespanid)[0];
+        datespanEl.innerHTML = "";
+    });
   });
 
   $(function () {
@@ -44,10 +44,10 @@
   });
 
   $(function () {
-    $(".field_input_date").on('blur', function () {
+    $(".date-field > .input-group > input").on('blur', function (e) {
       // valiDate() function:
       var parts, day, month, year;
-      var dateField = $(this)[0];
+      var dateField = e.target;
       var dateStr = dateField.value;
 
       // clear out any existing warnings:
@@ -55,8 +55,6 @@
       var datespanid = textid.replace('dateinput_', 'datespan_');
       var datespanEl = document.getElementById(datespanid);
       datespanEl.innerHTML = "";
-      // and the datepicker:
-      $(this).datepicker('hide');
 
       if (dateStr == "") {
           return true;
@@ -290,9 +288,9 @@
                
                   <tr id="dob" style="display:notnone">
                   <td><div>Date of Birth</div><div style="color:red; font-size:12px;"></div></td>
-                  <td><div><input type="text" value="2000-12-31" name="dob" class="field_input_date" id="dateinput_dob"  /><input type="button" value="Today" class="todaybutton" id="datebtn_dob" /> <br/>
+                  <td><div><div class="col-xs-3 date-field"><div class="input-group date"><input type="text" value="2000-12-31" name="dob" class="field_input_date form-control" id="dateinput_dob"  /><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span></div></div><input type="button" value="Today" class="todaybutton" id="datebtn_dob" /> <br/>
                              <span style="color:red" class="datespan" id="datespan_dob"></span>
-                  </div><div style="color:blue; font-size:12px;"></div></td>
+                      </div><div style="color:blue; font-size:12px;"></div></td>
                   </tr>
                
                   <tr id="sex" style="display:notnone">

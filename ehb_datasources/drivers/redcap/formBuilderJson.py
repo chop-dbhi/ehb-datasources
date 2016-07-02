@@ -66,22 +66,22 @@ class FormBuilderJson(object):
             meta, record_set, form_name, event_num, unique_event_names, event_labels)
         html = redcapTemplate("""
 <script type="text/javascript">
-  $(function() {
-    $( ".field_input_date" ).datepicker({
-            format: 'yyyy-mm-dd'
-        });
-  });
 
   $(function() {
-    $( ".field_input_date" ).datepicker()
-        .on('changeDate', function(ev){
-            $(this).datepicker('hide');
-            // and clear out any existing warnings:
-            var textid = $(this).attr('id');
-            var datespanid = textid.replace('dateinput_', 'datespan_');
-            var datespanEl = $('#' + datespanid)[0];
-            datespanEl.innerHTML = "";
-        });
+    $('.date-field .input-group.date').datepicker({
+      autoclose: true,
+      format: 'yyyy-mm-dd',
+      container: '.date-field',
+      keyboardNavigation: false,
+      showOnFocus: false,
+    }).on('changeDate', function(ev){
+        $(this).datepicker('hide');
+        // and clear out any existing warnings:
+        var textid = $(this).children('input').attr('id');
+        var datespanid = textid.replace('dateinput_', 'datespan_');
+        var datespanEl = $('#' + datespanid)[0];
+        datespanEl.innerHTML = "";
+    });
   });
 
   $(function () {
@@ -110,10 +110,10 @@ class FormBuilderJson(object):
   });
 
   $(function () {
-    $(".field_input_date").on('blur', function () {
+    $(".date-field > .input-group > input").on('blur', function (e) {
       // valiDate() function:
       var parts, day, month, year;
-      var dateField = $(this)[0];
+      var dateField = e.target;
       var dateStr = dateField.value;
 
       // clear out any existing warnings:
@@ -121,8 +121,6 @@ class FormBuilderJson(object):
       var datespanid = textid.replace('dateinput_', 'datespan_');
       var datespanEl = document.getElementById(datespanid);
       datespanEl.innerHTML = "";
-      // and the datepicker:
-      $(this).datepicker('hide');
 
       if (dateStr == "") {
           return true;
@@ -406,14 +404,15 @@ class FormBuilderJson(object):
             ffi[name]={'type':ft}
             field_class="field_input"
             text_field_id="input_"+field.get('field_name')
-            today_button=""
             if field.get('text_validation_type_or_show_slider_number') == 'date_ymd':
-                field_class="field_input_date"
+                field_class="field_input_date form-control"
                 text_field_id="date"+text_field_id
                 today_button="""<input type="button" value="Today" class="todaybutton" id="datebtn_{0}" /> <br/>
                              <span style="color:red" class="datespan" id="datespan_{0}"></span>""".format(field.get('field_name'))
-            return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />{5}
-                  """.format(value, name, field_class, text_field_id, onchange, today_button)
+                return """<div class="col-xs-3 date-field"><div class="input-group date"><input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} /><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span></div></div>{5}
+                      """.format(value, name, field_class, text_field_id, onchange, today_button)
+            return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
+                  """.format(value, name, field_class, text_field_id, onchange)
         elif ft == 'notes':
             ffi[name]={'type':ft}
             return """<textarea rows="5" cols="20" name="{0}" class="field_input" {1}>{2}</textarea>
