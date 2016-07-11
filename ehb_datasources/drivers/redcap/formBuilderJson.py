@@ -69,13 +69,10 @@ class FormBuilderJson(object):
 
   $(function() {
     $('.date-field .input-group.date').datepicker({
-      autoclose: true,
       format: 'yyyy-mm-dd',
-      container: '.date-field',
-      keyboardNavigation: false,
       showOnFocus: false,
+      autoclose: true,
     }).on('changeDate', function(ev){
-        $(this).datepicker('hide');
         // and clear out any existing warnings:
         var textid = $(this).children('input').attr('id');
         var datespanid = textid.replace('dateinput_', 'datespan_');
@@ -111,6 +108,7 @@ class FormBuilderJson(object):
 
   $(function () {
     $(".date-field > .input-group > input").on('blur', function (e) {
+      $('.date-field .input-group.date').datepicker('hide');
       // valiDate() function:
       var parts, day, month, year;
       var dateField = e.target;
