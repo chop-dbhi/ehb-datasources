@@ -188,7 +188,7 @@ class GenericDriver(RequestHandler):
             underscored version.
         * events: an iterable collection of unique event names to read records
             for (longitudinal only) default is all.
-        * eventName: a String value indicating whether the Event Label or
+        * event: a String value indicating whether the Event Label or
             Unique Event Name should be exported default is label
 
         '''
@@ -203,8 +203,8 @@ class GenericDriver(RequestHandler):
             if kwargs.get(item):
                 params[item] = self.build_parameter(kwargs.get(item))
 
-        if kwargs.get('eventName'):
-            params['eventName'] = kwargs.get('eventName')
+        if kwargs.get('event'):
+            params['event'] = kwargs.get('event')
 
         response = self.POST(self.path, headers, urllib.urlencode(params))
 
@@ -258,8 +258,8 @@ class GenericDriver(RequestHandler):
         for item in ['fields', 'forms']:
             if kwargs.get(item):
                 params[item] = self.build_parameter(kwargs.get(item))
-        if kwargs.get('eventName'):
-            params['eventName'] = kwargs.get('eventName')
+        if kwargs.get('event'):
+            params['event'] = kwargs.get('event')
         params = urllib.urlencode(params).replace('forms', 'forms[]')
         response = self.processResponse(
             self.POST(self.path, headers, params),
@@ -332,7 +332,7 @@ class ehbDriver(Driver, GenericDriver):
         * records
         * forms
         * events
-        * eventName
+        * event
 
         Also see GenericDriver.read_records doc
 
