@@ -1,10 +1,12 @@
 import json
 import os
 import re
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 import xml.dom.minidom as xml
 from xml.parsers.expat import ExpatError
-
+from collections import OrderedDict
 from jinja2 import Template
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
@@ -13,11 +15,7 @@ from ehb_datasources.drivers.Base import Driver, RequestHandler
 from ehb_datasources.drivers.exceptions import RecordDoesNotExist,\
     RecordCreationError
 from ehb_datasources.drivers.redcap.formBuilderJson import FormBuilderJson
-
-LBL_EDIT_MODAL_TEMPLATE = Template(
-    open(os.path.join(
-        os.path.dirname(__file__),
-        'templates/label_edit_modal.html'), 'rb').read())
+from functools import reduce
 
 
 class GenericDriver(RequestHandler):
@@ -69,12 +67,13 @@ class GenericDriver(RequestHandler):
             p += str(item) + ','
         return p[0: p.__len__() - 1]
 
-    def write_records(self, data, _format=FORMAT_JSON, _type=TYPE_FLAT,
+    def write_records(self, data, _type=TYPE_FLAT,
                       overwrite=OVERWRITE_NORMAL, headers=STANDARD_HEADER,
                       useRawData=False):
         '''
         Attempts to write records contained in data to REDCap project
-        associated with the current token.
+        associated with the current token. The REDCap API currently works
+        reliably on while using XML formatting.
 
         Inputs:
         -------
@@ -103,33 +102,22 @@ class GenericDriver(RequestHandler):
         * Integer -- number of records created
 
         '''
-        if useRawData or _format == self.FORMAT_CSV:
+        if useRawData:
             req_data = data
-        elif _format == self.FORMAT_JSON:
-            req_data = json.dumps(data)
-        elif _format == self.FORMAT_XML:
-            req_data = data.toxml('UTF-8')
         else:
-            req_data = None
+            req_data = data.toxml('UTF-8')
 
-        if _format == self.FORMAT_CSV:
-            headers['Accept'] = 'text/csv'
-        elif _format == self.FORMAT_JSON:
-            headers['Accept'] = 'application/json'
-        elif _format == self.FORMAT_XML:
-            headers['Accept'] = 'text/xml'
-
+        headers['Accept'] = 'text/xml'
         params = {
             'token': self.token,
             'content': self.CONTENT_RECORD,
-            'format': _format,
+            'format': self.FORMAT_XML,
             'type': _type,
             'overwriteBehavior': overwrite,
             'data': req_data
         }
-
-        response = self.POST(self.path, headers, urllib.urlencode(params))
-
+        params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
+        response = self.POST(self.path, headers, urllib.parse.urlencode(params))
         if response.status == 201 or response.status == 200:
             # Record was processed properly
             processed_response = self.processResponse(response, self.path)
@@ -198,6 +186,7 @@ class GenericDriver(RequestHandler):
             'format': _format,
             'type': _type
         }
+        params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 
         for item in ['records', 'fields', 'forms', 'events']:
             if kwargs.get(item):
@@ -206,8 +195,7 @@ class GenericDriver(RequestHandler):
         if kwargs.get('event'):
             params['event'] = kwargs.get('event')
 
-        response = self.POST(self.path, headers, urllib.urlencode(params))
-
+        response = self.POST(self.path, headers, urllib.parse.urlencode(params))
         if rawResponse:
             return response
         else:
@@ -254,13 +242,13 @@ class GenericDriver(RequestHandler):
             'format':
             _format
         }
+        params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 
         for item in ['fields', 'forms']:
             if kwargs.get(item):
                 params[item] = self.build_parameter(kwargs.get(item))
-        if kwargs.get('event'):
-            params['event'] = kwargs.get('event')
-        params = urllib.urlencode(params).replace('forms', 'forms[]')
+
+        params = urllib.parse.urlencode(params).replace('forms', 'forms[]')
         response = self.processResponse(
             self.POST(self.path, headers, params),
             self.path
@@ -418,10 +406,7 @@ class ehbDriver(Driver, GenericDriver):
         def validate_id(pid):
             try:
                 x = None
-                if record_id_prefix:
-                    x = self.get(record_id=record_id_prefix + ':' + pid)
-                else:
-                    x = self.get(record_id=pid)
+                x = self.get(record_id=record_id_prefix + ':' + pid)
                 if x:
                     return False
                 else:
@@ -481,7 +466,6 @@ class ehbDriver(Driver, GenericDriver):
 
         if 1 != self.write_records(
             data=xml.parseString(record),
-            _format=GenericDriver.FORMAT_XML,
             overwrite=overwrite
         ):
             raise RecordCreationError(self.url, self.path, study_id, 'Unknown')
@@ -548,7 +532,7 @@ class ehbDriver(Driver, GenericDriver):
                 self.unique_event_names = json_config['unique_event_names']
                 self.event_labels = json_config['event_labels']
                 self.form_data = {}
-                for k in json_config['form_data'].keys():
+                for k in list(json_config['form_data'].keys()):
                     bools = []
                     values = json_config['form_data'][k]
                     for v in values:
@@ -605,7 +589,7 @@ class ehbDriver(Driver, GenericDriver):
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
             count = counter(0)
-            rows = [makeRow(fn, count.next()) for fn in self.form_names]
+            rows = [makeRow(fn, next(count)) for fn in self.form_names]
             form += ''.join(rows) + '</table>'
             return form
         else:
@@ -640,7 +624,7 @@ class ehbDriver(Driver, GenericDriver):
                         y: x + ' ' + y.capitalize(),
                         l[0].split('_'), '') + '</td>' + reduce(
                         lambda x,
-                        y: x + make_td(i, count.next(), y),
+                        y: x + make_td(i, next(count), y),
                         self.form_data[l[0]],
                         '') + '</tr>' + make_trs(i + 1, l[1: len(l)])
                 else:
@@ -649,7 +633,7 @@ class ehbDriver(Driver, GenericDriver):
                         y: x + ' ' + y.capitalize(),
                         l[0].split('_'), '') + '</td>' + reduce(
                         lambda x,
-                        y: x + make_td(i, count.next(), y),
+                        y: x + make_td(i, next(count), y),
                         self.form_data[l[0]],
                         '')
 
@@ -703,9 +687,6 @@ class ehbDriver(Driver, GenericDriver):
             re.match(r'^\d+$', form_spec) or re.match(r'^\d+_\d+$', form_spec)
         ):
             return None
-        # Longitudinal study must have event number and form number
-        elif not self.form_names and not re.match(r'^\d+_\d+$', form_spec):
-            return None
 
         split = form_spec.split('_')
         form_num = int(split[0])
@@ -737,10 +718,7 @@ class ehbDriver(Driver, GenericDriver):
                                   records=[er.record_id],
                                   rawResponse=True,
                                   forms=[form_name]).read().strip()
-            if len(record_set) > 0:
-                record_set = self.raw_to_json(record_set)
-            else:
-                record_set = None
+            record_set = self.raw_to_json(record_set)
             return form_builder.construct_form(meta_data,
                                                record_set,
                                                form_name,
@@ -755,10 +733,7 @@ class ehbDriver(Driver, GenericDriver):
                             rawResponse=True,
                             records=[er.record_id])
             record_set = temp.read().strip()
-            if len(record_set) > 0:
-                record_set = self.raw_to_json(record_set)
-            else:
-                record_set = None
+            record_set = self.raw_to_json(record_set)
             return form_builder.construct_form(meta_data,
                                                record_set,
                                                form_name,
@@ -804,10 +779,11 @@ class ehbDriver(Driver, GenericDriver):
 
         def fieldDataXmlFrom(field_name, field_value):
             if field_value and field_value != '':
-                return '<' + field_name + '><![CDATA[' + field_value + \
-                    ']]></' + field_name + '>'
+                return '<{field_name}><![CDATA[{field_value}]]></{field_name}>'.format(
+                    field_name=field_name,
+                    field_value=str(field_value))
             else:
-                return '<' + field_name + '/>'
+                return '<{field_name}/>'.format(field_name=field_name)
 
         def make_data_entry_for(item):
             ft = self.__getCDATA(item, 'field_type')
@@ -825,10 +801,10 @@ class ehbDriver(Driver, GenericDriver):
                 def getValue(k):
                     v = data.get(fn + '___' + k)
                     if v and v != '':
-                        return v
+                        return str(v)
                     else:
                         return '0'
-                xml = [
+                xml_data = [
                     fieldDataXmlFrom(
                         fn + '___' + k,
                         getValue(k)
@@ -854,15 +830,15 @@ class ehbDriver(Driver, GenericDriver):
             elif ft == 'slider':
                 return ''
             else:
-                return fieldDataXmlFrom(field_name, fv)
+                return fieldDataXmlFrom(field_name, str(fv))
 
         # This will hold the data submitted in the form
         data = {}
 
         post_data = request.POST
         if post_data:
-            for k, v in post_data.items():
-                data[k] = v.encode('ascii', 'xmlcharrefreplace')
+            for k, v in list(post_data.items()):
+                data[k] = v
         else:
             return ['No data in request']
 
@@ -918,10 +894,10 @@ class ehbDriver(Driver, GenericDriver):
             form_fields = session.get('{0}_fields'.format(form_name), None)
         if id_label and session and form_fields:
             data_entries = ''.join(
-                [make_data_entry_from_session(field_name, field_dict) for field_name, field_dict in form_fields.items()]  # noqa
+                [make_data_entry_from_session(field_name, field_dict) for field_name, field_dict in list(form_fields.items())]  # noqa
             )
         else:
-            # Use meta data from REDCap request
+            # Use meta data from REDCap
             meta_data = self.meta(_format=self.FORMAT_XML, forms=[form_name])
             # Try to figure out the id field from the metadata
             # It is assumed that the first item is the record id field
@@ -939,7 +915,7 @@ class ehbDriver(Driver, GenericDriver):
             # loop over items in meta_data to construct data entries from data
             data_entries = ''.join([make_data_entry_for(item) for item in items[1: len(items)] if self.__getCDATA(item, 'form_name') == form_name])  # noqa
 
-        if id_label in data.keys():
+        if id_label in list(data.keys()):
             record = '<records><item>'
         else:
             record = '<records><item><' + id_label + '><![CDATA[' + \
@@ -958,7 +934,6 @@ class ehbDriver(Driver, GenericDriver):
         try:
             if 1 != self.write_records(
                 data=record,
-                _format=GenericDriver.FORMAT_XML,
                 overwrite=GenericDriver.OVERWRITE_OVERWRITE,
                 useRawData=True
             ):
@@ -967,32 +942,3 @@ class ehbDriver(Driver, GenericDriver):
         except Exception:
             return ['Parse error. REDCap response is an unknown format.' +
                     ' Please contact system administrator.']
-
-    def recordListForm(self, record_urls, records, labels,
-                       *args, **kwargs):
-
-        rows = ''
-        for url, record in zip(record_urls, records):
-            r_lbl = 'Record'
-            for label in labels:
-                if (
-                    record['label'] == label['id'] and
-                    record['label'] != 1
-                ):
-                    r_lbl = label['label']
-            rows += ('<tr><td><a href="{url}"><span id="{id}_label">{label}' +
-                     '</span></a>\t<a href="#" data-target="#labelUpdate" ' +
-                     'data-toggle="modal" data-id={id}><span class="" ' +
-                     'style="font-size:.7em">[edit label]</span></a></td>' +
-                     '<td>{created}</td><td>{modified}</td></tr>').format(
-                url=url,
-                label=r_lbl,
-                id=record['id'],
-                created=record['created'],
-                modified=record['modified']
-            )
-
-        return ('<table class="table table-bordered table-striped"><thead>' +
-                '<tr><th>Record</th><th>Created</th><th>Modified</th></tr>' +
-                '</thead><tbody>' + rows + '</tbody></table>' +
-                LBL_EDIT_MODAL_TEMPLATE.render({'labels': labels}))

@@ -77,10 +77,3 @@ class PhenotypeDriver(Driver, RequestHandler):
         Should process new data in new record form and return the record id
         '''
         pass
-
-    def recordListForm(self, request, record_urls, records, *args, **kwargs):
-        rows = ('<a href="' + self.url + 'ehb/intake/' + str(records[0].id) +
-                '" target="_blank">Open record in external system</a>')
-        return ('<table class="table table-bordered table-striped">' +
-                '<thead><tr><th>Record</th></tr></thead><tbody><tr><td>' +
-                rows + '</td></tr></tbody></table>')

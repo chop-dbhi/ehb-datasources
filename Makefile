@@ -3,4 +3,4 @@
 all: test
 
 test:
-	nosetests --with-coverage --with-timer --cover-package=ehb_datasources
+	pytest -v --cov-report=html --cov=ehb_datasources ehb_datasources/tests/unit_tests

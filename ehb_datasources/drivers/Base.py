@@ -1,24 +1,23 @@
 from abc import ABCMeta, abstractmethod
-from exceptions import PageNotFound, ServerError
+from .exceptions import PageNotFound, ServerError
 import datetime
-import httplib
+import http.client
 import json
 import random
 import string
 import logging
 import re
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 import xml.dom.minidom as xml
 
 log = logging.getLogger('ehb_datasources')
 
 
-class Driver(object):
+class Driver(object, metaclass=ABCMeta):
     '''
     Abstract electronic honest broker (ehb) datasource driver class
     '''
-    __metaclass__ = ABCMeta
 
     def __init__(self, url, username, password, secure):
         self.url = url
@@ -135,21 +134,6 @@ class Driver(object):
         '''
         pass
 
-    @abstractmethod
-    def recordListForm(self, request, record_urls, records, *args, **kwargs):
-        '''
-        Should return a string representation of an html element that allows
-        the user to select a record to work with if allowed, Otherwise an
-        appropriate html element indicating this is restricted should be shown.
-
-        Inputs:
-            * record_urls : a dict of {id:url_string} where id is the record id
-                and the url_string is a string representation of the url to the
-                record subRecordSelectionForm
-            * records : collection of record objects
-        '''
-        pass
-
     def create_random_record_id(self, size=9,
                                 chars=string.ascii_uppercase + string.digits,
                                 validator_func=None, max_attempts=10):
@@ -240,9 +224,9 @@ class RequestHandler(object):
         self.lastrequestbody = body
 
         if(self.secure):
-            c = httplib.HTTPSConnection(self.host)
+            c = http.client.HTTPSConnection(self.host)
         else:
-            c = httplib.HTTPConnection(self.host)
+            c = http.client.HTTPConnection(self.host)
 
         ts = datetime.datetime.now()
 
@@ -281,7 +265,7 @@ class RequestHandler(object):
         elif status == 201:
             return self.readAndClose(response)
         elif status == 400:
-            msg = "Bad Request: " + response.read()
+            msg = 'Bad Request: {}'.format(response.read())
             self.closeConnection()
             raise Exception(msg)
         elif status == 406:
@@ -296,7 +280,7 @@ class RequestHandler(object):
             raise ServerError
         else:
             self.closeConnection()
-            msg = "Unknown response code from server: " + str(status)
+            msg = 'Unknown response code from server: {}'.format(status)
             raise Exception(msg)
 
     def readAndClose(self, response):
@@ -315,9 +299,10 @@ class RequestHandler(object):
             return matchobj.group(1)
 
         try:
-            return json.loads(raw_string)
+            return json.loads(raw_string.decode('utf-8', 'backslashreplace'))
         except:
-            return json.loads(raw_string.encode('unicode-escape'))
+            raise
+            return json.loads(raw_string.decode('unicode-escape'))
         else:
             raise
 
@@ -329,12 +314,14 @@ class RequestHandler(object):
                 return xml.parseString(responseString)
             return responseString
         except Exception:
+            # TODO: Pass up some informative error
+            raise
             pass
 
     def extract_data_from_post_request(self, request):
         data = {}  # this will hold the data submitted in the form
         post_data = request._post
         if post_data:
-            for k, v in post_data.items():
+            for k, v in list(post_data.items()):
                 data[k] = v
             return data

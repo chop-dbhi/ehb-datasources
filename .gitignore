@@ -10,3 +10,6 @@ resources/
 redcap_test.py
 *.egg-info
 .coverage
+htmlcov
+.cache
+*.log

@@ -1,0 +1,14 @@
+machine:
+  python:
+      version: 3.5.1
+
+dependencies:
+    override:
+        - pip install -r requirements-dev.txt
+
+test:
+    override:
+        - pip install -e .
+        - pytest -v --cov-report=html --cov=ehb_datasources ehb_datasources/tests/unit_tests
+    post:
+        - cp -r htmlcov $CIRCLE_ARTIFACTS/coverage

@@ -1,6 +1,7 @@
 import re
 import json
 from string import Template
+from functools import reduce
 
 
 class redcapTemplate(Template):
@@ -205,6 +206,9 @@ class FormBuilderJson(object):
         }
     })
     $.ajax({
+      beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", csrf_token);
+      },
       type: "POST",
       url:$(location).attr('pathname'),
       data: dataString,
@@ -336,7 +340,7 @@ class FormBuilderJson(object):
             form_header=self.form_header(form_name, event_num, event_labels),
             table_rows=self.table_rows(meta, record, form_name, master_dep_map, apriori_branch_evals),
             blank='',
-            branch_logic=''.join(['\n\n{0}'.format(item) for item in branch_logic_functions.values()]),
+            branch_logic=''.join(['\n\n{0}'.format(item) for item in list(branch_logic_functions.values())]),
         )
 
     def table_rows(self, meta, record, form_name, master_dep_map, apriori_branch_evals):
@@ -431,7 +435,11 @@ class FormBuilderJson(object):
             def constructChoice(k,v):
                 check_name = '{0}___{1}'.format(name,k)
                 check_value = 0
-                if record: check_value = int(record.get(check_name).strip())
+                if record:
+                    try:
+                        check_value = int(record.get(check_name).strip())
+                    except ValueError:
+                        pass
                 checked = ''
                 if check_value == 1: checked = 'checked="checked"'
                 onchange = self.build_fld_on_change_function(check_name, master_dependency_map)

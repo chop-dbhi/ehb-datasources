@@ -6,11 +6,6 @@ from ehb_datasources.drivers.exceptions import RecordCreationError, \
 
 from jinja2 import Template
 
-LBL_EDIT_MODAL_TEMPLATE = Template(
-    open(os.path.join(
-        os.path.dirname(__file__),
-        'templates/label_edit_modal.html'), 'rb').read())
-
 
 class ehbDriver(Driver, RequestHandler):
 
@@ -24,7 +19,7 @@ class ehbDriver(Driver, RequestHandler):
             if sp.__len__() > 2:
                 for i in range(3, sp.__len__()):
                     path += sp[i] + '/'
-            return path[0:path.__len__()-1]
+            return path[0:path.__len__() - 1]
 
         Driver.__init__(self, url=url, username=user, password=password,
                         secure=secure)
@@ -84,7 +79,7 @@ class ehbDriver(Driver, RequestHandler):
         if request.method == 'POST':
             data = self.extract_data_from_post_request(request)
             ex_id = data.get("ex_id_form", '')
-            fld_sdg_name += ' value="' + sdg_name + '"'
+            fld_sdg_name += ' value="' + ex_id + '"'
 
         fld_sdg_name += '/>'
 
@@ -106,31 +101,3 @@ class ehbDriver(Driver, RequestHandler):
         valid = (valid == 0) or (valid == 1)
         if valid:
             return ex_id
-
-    def recordListForm(self, record_urls, records, labels, *args,
-                       **kwargs):
-        rows = ''
-        for url, record in zip(record_urls, records):
-            r_lbl = 'Record'
-            for label in labels:
-                if (
-                    record['label'] == label['id'] and
-                    record['label'] != 1
-                ):
-                    r_lbl = label['label']
-            rows += ('<tr><td><a href="{url}"><span id="{id}_label">{label}' +
-                     '</span></a>\t<a href="#" data-target="#labelUpdate" ' +
-                     'data-toggle="modal" data-id={id}><span class="" ' +
-                     'style="font-size:.7em">[edit label]</span></a></td>' +
-                     '<td>{created}</td><td>{modified}</td></tr>').format(
-                url=url,
-                label=r_lbl,
-                id=record['id'],
-                created=record['created'],
-                modified=record['modified']
-            )
-
-        return ('<table class="table table-bordered table-striped"><thead>' +
-                '<tr><th>Record</th><th>Created</th><th>Modified</th></tr>' +
-                '</thead><tbody>' + rows + '</tbody></table>' +
-                LBL_EDIT_MODAL_TEMPLATE.render({'labels': labels}))

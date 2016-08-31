@@ -3,7 +3,8 @@ import datetime
 import json
 import logging
 import os
-import urllib
+from collections import OrderedDict
+import urllib.request, urllib.parse, urllib.error
 
 from jinja2 import Template
 
@@ -12,11 +13,6 @@ from ehb_datasources.drivers.exceptions import RecordCreationError, \
     IgnoreEhbExceptions
 
 log = logging.getLogger('ehb')
-
-LBL_EDIT_MODAL_TEMPLATE = Template(
-    open(os.path.join(
-        os.path.dirname(__file__),
-        'templates/label_edit_modal.html'), 'rb').read())
 
 
 class ehbDriver(Driver, RequestHandler):
@@ -43,7 +39,7 @@ class ehbDriver(Driver, RequestHandler):
             if sp.__len__() > 2:
                 for i in range(3, sp.__len__()):
                     path += sp[i] + '/'
-            return path[0:path.__len__()-1]
+            return path[0:path.__len__() - 1]
 
         Driver.__init__(self, url=url, username=user, password=password,
                         secure=secure)
@@ -61,7 +57,8 @@ class ehbDriver(Driver, RequestHandler):
         return (None, None)
 
     def encode_nau_creds(self):
-        return 'Basic ' + base64.b64encode(self.username+':'+self.password)
+        creds = base64.b64encode(bytes('{0}:{1}'.format(self.username, self.password), 'utf-8'))
+        return 'Basic {0}'.format(creds.decode('utf-8'))
 
     def get(self, record_id=None, *args, **kwargs):
         pass
@@ -88,11 +85,13 @@ class ehbDriver(Driver, RequestHandler):
         fldvals = kwargs.get('fldvals', {})
         nau_sub_path = kwargs.get('nau_sub_path', '')
         rec_key, rec_id = self.find_nau_elem_identifier(kwargs)
+        # Using OrderedDict for test reproducibility.
+        params = OrderedDict([
+            (rec_key, rec_id),
+            ("fldvals", fldvals)
+        ])
         body = [
-            {
-                rec_key: rec_id,
-                "fldvals": fldvals
-            }
+            params
         ]
         body = json.dumps(body)
         nau_creds = self.encode_nau_creds()
@@ -106,7 +105,6 @@ class ehbDriver(Driver, RequestHandler):
             full_path += '/'
         response = self.PUT(full_path, headers, body)
         processed_response = self.processResponse(response, self.path)
-
         return processed_response
 
     def get_sample_data(self, *args, **kwargs):
@@ -125,33 +123,37 @@ class ehbDriver(Driver, RequestHandler):
         if not full_path.endswith('/'):
             full_path += '/'
         full_path += '?name={sdg}'.format(sdg=kwargs.get('record_id'))
-        response = self.GET(full_path, headers, body).read()
-        return json.loads(response)[0]
+        response = self.GET(full_path, headers, body).read().decode('utf-8')
+        try:
+            return json.loads(response)[0]
+        except KeyError:
+            log.error('Error retrieving sample data')
+            return {"error": "Unable to retrieve sample data"}
 
-    def extract_aliquots(self, sample_json):
+    def extract_aliquots(self, sample_data):
         aliquots = []
         try:
-            assert type(sample_json['SDG']['SAMPLE']) is list
-            for sample in sample_json['SDG']['SAMPLE']:
+            assert type(sample_data['SDG']['SAMPLE']) is list
+            for sample in sample_data['SDG']['SAMPLE']:
                 for i in sample['ALIQUOT']:
                     aliquots.append(i)
             return aliquots
         except:
             pass
         try:
-            assert type(sample_json['SDG']['SAMPLE']['ALIQUOT']) is dict
-            if type(sample_json['SDG']['SAMPLE']['ALIQUOT']) is dict:
-                aliquots = [sample_json['SDG']['SAMPLE']['ALIQUOT']]
+            assert type(sample_data['SDG']['SAMPLE']['ALIQUOT']) is dict
+            if type(sample_data['SDG']['SAMPLE']['ALIQUOT']) is dict:
+                aliquots = [sample_data['SDG']['SAMPLE']['ALIQUOT']]
             return aliquots
         except:
             pass
         try:
-            aliquots = sample_json['SDG']['SAMPLE']['ALIQUOT']
+            aliquots = sample_data['SDG']['SAMPLE']['ALIQUOT']
         except:
             pass
         return aliquots
 
-    def format_aliquots(self, sample_json):
+    def format_aliquots(self, sample_data):
         type_map = {
             'TISS': 'Tissue',
             'BLD': 'Blood',
@@ -170,7 +172,7 @@ class ehbDriver(Driver, RequestHandler):
             'PLAS': 'Plasma',
             'PLF': 'Pleural Fluid',
             'PHC': 'Apheresis Cells'
-         }
+        }
         secondary_type_map = {
             'CELC': 'Cell Culture',
             'FFRZ': 'Flash Frozen',
@@ -181,7 +183,7 @@ class ehbDriver(Driver, RequestHandler):
             'MAT': 'Maternal',
             'PAT': 'Paternal'
         }
-        for each in sample_json:
+        for each in sample_data:
             try:
                 sample_type = type_map[each['U_SAMPLE_TYPE']]
             except:
@@ -217,7 +219,7 @@ class ehbDriver(Driver, RequestHandler):
                     )
                 except:
                     each['U_COLLECT_DATE_TIME'] = "Unknown"
-        return sample_json
+        return sample_data
 
     def configure(self, driver_configuration='', *args, **kwargs):
         pass
@@ -230,7 +232,7 @@ class ehbDriver(Driver, RequestHandler):
         tpl = open(
             os.path.join(
                 os.path.dirname(__file__),
-                'templates/sample_display.html'), 'rb').read()
+                'templates/sample_display.html'), 'r').read()
 
         t = Template(tpl)
 
@@ -248,32 +250,8 @@ class ehbDriver(Driver, RequestHandler):
         html = t.render(c)
         return html
 
-    def printLabels(self, aliquot_id, dest_printer, fmt, pds):
-        nau_creds = self.encode_nau_creds()
-        headers = {
-            'Accept': 'application/json',
-            'NAUTILUS_CREDS': nau_creds,
-            'Content-Type': 'application/json'
-        }
-        full_path = self.path + 'label/'
-        body = pds.driver_configuration
-        f = {
-            'aliq_id': aliquot_id,
-            'dest_printer': dest_printer,
-            'fmt': fmt
-        }
-        query = urllib.urlencode(f)
-
-        full_path += '?{query}'.format(query=query)
-
-        response = self.POST(full_path, headers, body).read()
-
-        return response
-
     def subRecordForm(self, external_record, form_spec='', *args, **kwargs):
-        html = '<h3><em>Print Labels</em></h3><br/><br/><button class="btn' + \
-            'btn-primary">Print labels for this sample group</button><br><br>'
-        return html
+        pass
 
     def processForm(self, request, external_record, form_spec='', *args,
                     **kwargs):
@@ -320,15 +298,16 @@ class ehbDriver(Driver, RequestHandler):
 
         # Need to pull sdg_name from the form and check it in with the NauRest
         data = self.extract_data_from_post_request(request)
-        sdg_name = str(data.get(self.FORM_SDG_NAME)).strip()
+        sdg_name = data.get(self.FORM_SDG_NAME)
 
         valid = -1
         if sdg_name:
+            sdg_name = str(sdg_name).strip()
             valid = record_id_validator(sdg_name, False)
 
         valid = (valid == 0) or (valid == 1)
         if sdg_name and valid:
-            ex_ref = record_id_prefix+':'+sdg_name+':'+'100'
+            ex_ref = '{0}:{1}:100'.format(record_id_prefix, sdg_name)
             response = self.update(
                 name=sdg_name,
                 fldvals={
@@ -336,7 +315,7 @@ class ehbDriver(Driver, RequestHandler):
                     'EXTERNAL_REFERENCE': ex_ref},
                 nau_sub_path='sdg'
             )
-            status = json.loads(response)[0].get('status')
+            status = json.loads(response.decode('utf-8'))[0].get('status')
             if not status == '200':
                 msg = self.NAU_ERROR_MAP.get(status, 'UNKNOWN ERROR')
                 raise RecordCreationError(url=self.url,
@@ -359,31 +338,3 @@ class ehbDriver(Driver, RequestHandler):
                                           path=None,
                                           record_id=None,
                                           cause='Subject ID is required')
-
-    def recordListForm(self, record_urls, records, labels, *args,
-                       **kwargs):
-        rows = ''
-        for url, record in zip(record_urls, records):
-            r_lbl = 'Sample'
-            for label in labels:
-                if (
-                    record['label'] == label['id'] and
-                    record['label'] != 1
-                ):
-                    r_lbl = label['label']
-            rows += ('<tr><td><a href="{url}"><span id="{id}_label">{label}' +
-                     '</span></a>\t<a href="#" data-target="#labelUpdate" ' +
-                     'data-toggle="modal" data-id={id}><span class="" ' +
-                     'style="font-size:.7em">[edit label]</span></a></td>' +
-                     '<td>{created}</td><td>{modified}</td></tr>').format(
-                url=url,
-                label=r_lbl,
-                id=record['id'],
-                created=record['created'],
-                modified=record['modified']
-            )
-
-        return ('<table class="table table-bordered table-striped"><thead>' +
-                '<tr><th>Sample</th><th>Created</th><th>Modified</th></tr>' +
-                '</thead><tbody>' + rows + '</tbody></table>' +
-                LBL_EDIT_MODAL_TEMPLATE.render({'labels': labels}))

@@ -25,12 +25,13 @@ eHB Datasources is a dependency of the Biorepository Portal and should be instal
 
 eHB Datasources does have a dependency on Jinja for templating. Otherwise, if you'd like to test the package run:
 
-`pip install -r requirements.txt`
+`pip install -r requirements-dev.txt`
 
 Which will install the following dependencies:
 
-* nose>=1.3.7,<2
-* coverage>=3.7.1,<4
+* pytest>=3,<4
+* pytest-cov>=2.3,<3
+* pytest-mock>=1.2,<2
 * nose-timer>=0.5.0,<1
 * mock>=1.3,<2
 

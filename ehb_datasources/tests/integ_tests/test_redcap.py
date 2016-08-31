@@ -67,7 +67,7 @@ class TestDriver(unittest.TestCase, RequestResources):
         self.assertEqual(self.driver.form_names, None)
         self.driver.configure(self.regular_config)
         self.assertEqual(self.driver.form_names,
-                         [u'demographics', u'testing', u'imaging'])
+                         ['demographics', 'testing', 'imaging'])
 
     def test_configure_longitudinal(self):
         pass
@@ -77,8 +77,8 @@ class TestDriver(unittest.TestCase, RequestResources):
         self.assertEqual(self.driver.form_data_ordered, None)
         self.driver.configure(self.long_config)
         self.assertEqual(self.driver.unique_event_names,
-                         [u'initial_arm_1', u'update_one_arm_1',
-                          u'update_two_arm_2'])
+                         ['initial_arm_1', 'update_one_arm_1',
+                          'update_two_arm_2'])
         unique_event_names = None
         event_labels = None
         form_data = None
