@@ -824,7 +824,7 @@ class ehbDriver(Driver, GenericDriver):
 
         def make_data_entry_from_session(field_name, field_dict):
             ft = field_dict['type']
-            fv = data.get(field_name, None)
+            fv = data.get(field_name, '')
             if ft == 'checkbox' and (not fv or fv == ''):
                 return fieldDataXmlFrom(field_name, '0')
             elif ft == 'slider':
