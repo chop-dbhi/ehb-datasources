@@ -213,7 +213,7 @@ class FormBuilderJson(object):
       url:$(location).attr('pathname'),
       data: dataString,
       success: function(data){
-        if(data == 'Parse error. REDCap response is an unknown format. Please contact system administrator.'){
+        if(data.status == 'error'){
           $("#pleaseWaitModal").modal('hide');
           $("#errorModal").modal('show');
         }
