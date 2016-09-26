@@ -584,7 +584,7 @@ class ehbDriver(Driver, GenericDriver):
                               ' data-backdrop="static" data-keyboard="false"' +
                               ' href="#pleaseWaitModal" class="btn btn-small' +
                               ' btn-primary" onclick="location.href=\'' +
-                              form_url + str(i) + '\'">Edit</button></td>')
+                              form_url + str(i) + '/\'">Edit</button></td>')
 
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
@@ -612,7 +612,7 @@ class ehbDriver(Driver, GenericDriver):
                             'href="#pleaseWaitModal" class="btn btn-small ' +
                             'btn-primary" onclick="location.href=\'' +
                             form_url +
-                            str(i) + '_' + str(j) + '\'">Edit</button></td>')
+                            str(i) + '_' + str(j) + '/\'">Edit</button></td>')
                 else:
                     return '<td></td>'
 
