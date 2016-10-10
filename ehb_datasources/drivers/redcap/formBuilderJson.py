@@ -3,6 +3,9 @@ import json
 from string import Template
 from functools import reduce
 
+import logging
+
+log = logging.getLogger(__name__)
 
 class redcapTemplate(Template):
     '''
@@ -54,7 +57,13 @@ class FormBuilderJson(object):
                 if rec.get('redcap_event_name') == uen:
                     record = rec
         else:
-            record = record_set[0]
+            try:
+                record = record_set[0]
+            except IndexError:
+                log.error('Error retreving record from redcap. record_id: {0}'.format(record_id))
+                return '''
+                    <div class="alert alert-danger"><center><span>There was an error retrieving this record from REDCap</span></center></div>
+                '''
         form_fields = [
             item for item in meta if item.get("form_name") == form_name
         ]

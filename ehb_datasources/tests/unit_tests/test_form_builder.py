@@ -70,3 +70,18 @@ def test_construct_form2_w_imported_record(form_builder, redcap_metadata_json2, 
         'study_id'
     )
     assert '0GUQDBCDE0EAWN9Q:8LAG76CHO' not in form
+
+
+def test_construct_form_bad_redcap_record(form_builder, redcap_metadata_json2):
+    form = form_builder.construct_form(
+        json.loads(redcap_metadata_json2.decode('utf-8')),
+        json.loads(b'[]'.decode('utf-8')),
+        'demographics_form',
+        1,
+        0,
+        ['diagnosis_arm_1', '6_month_update_arm_1', '12_month_update_arm_1', '18_month_update_arm_1', '24_month_update_arm_1', '36_month_update_arm_1', '48_month_update_arm_1', '60_month_update_arm_1', '5_year_plus_update_arm_1', '10_year_plus_updat_arm_1', '15_year_plus_updat_arm_1'],
+        ['Diagnosis', '6 Month Update', '12 Month Update', '18 Month Update', '24 Month Update', '36 Month Update', '48 Month Update', '60 Month Update', '5 Year Plus Update', '10 Year Plus Update', '15 Year Plus Update'],
+        None,
+        'study_id'
+    )
+    assert 'There was an error retrieving this record from REDCap' in form
