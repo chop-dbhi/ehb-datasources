@@ -1,1 +1,2 @@
 exclude ehb_datasources/tests.py
+include ehb_datasources/drivers/nautilus/templates/sample_display.html
