@@ -1,5 +1,5 @@
 
-1.0.2
+1.0.3
 -----
 * Add additional Nautilus mappings
   * Saliva
@@ -11,6 +11,10 @@
   * QC Xpose
   * QC Agilent
 * Add logging facilities to identify unmapped sample types as they come through.
+
+1.0.2
+-----
+* Adds exception handling for empty REDCap responses
 
 1.0.1
 -----
