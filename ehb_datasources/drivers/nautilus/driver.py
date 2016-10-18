@@ -173,9 +173,12 @@ class ehbDriver(Driver, RequestHandler):
             'PLF': 'Pleural Fluid',
             'PHC': 'Apheresis Cells',
             'CELN': 'Cell Line',
+            'CELLFRZ': 'Cell Freeze',
             'SAL': 'Saliva',
             'SLD': 'Slide',
             'LYS': 'Lysate',
+            'XEN': 'Xenograft',
+            'PROT': 'Protein',
             'QC-GEL': 'QC Gel',
             'QC-Xpose': 'QC Xpose',
             'QC-AGIL': 'QC Agilent'
@@ -191,7 +194,8 @@ class ehbDriver(Driver, RequestHandler):
             'MAT': 'Maternal',
             'PAT': 'Paternal',
             'SUP': 'Supernant',
-            'CELP': 'Cell Pellet'
+            'CELP': 'Cell Pellet',
+            'FFPE': 'FFPE',
         }
         for each in sample_data:
             try:
