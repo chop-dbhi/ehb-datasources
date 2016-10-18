@@ -12,7 +12,7 @@ from ehb_datasources.drivers.Base import Driver, RequestHandler
 from ehb_datasources.drivers.exceptions import RecordCreationError, \
     IgnoreEhbExceptions
 
-log = logging.getLogger('ehb')
+log = logging.getLogger(__file__)
 
 
 class ehbDriver(Driver, RequestHandler):
@@ -163,7 +163,7 @@ class ehbDriver(Driver, RequestHandler):
             'TUM': 'Tumor Tissue',
             'PBMC': 'PBMC',
             'PHER': 'Pheresate',
-            'RNA': 'RNS',
+            'RNA': 'RNA',
             'CSF': 'Cerebral Spinal Fluid',
             'BMLC': 'Bone Marrow Cells - Left',
             'BMCL': 'Bone Marrow Cells',
@@ -171,27 +171,48 @@ class ehbDriver(Driver, RequestHandler):
             'BSWB': 'Buccal Swab',
             'PLAS': 'Plasma',
             'PLF': 'Pleural Fluid',
-            'PHC': 'Apheresis Cells'
+            'PHC': 'Apheresis Cells',
+            'CELN': 'Cell Line',
+            'CELLFRZ': 'Cell Freeze',
+            'SAL': 'Saliva',
+            'SLD': 'Slide',
+            'LYS': 'Lysate',
+            'XEN': 'Xenograft',
+            'PROT': 'Protein',
+            'QC-GEL': 'QC Gel',
+            'QC-Xpose': 'QC Xpose',
+            'QC-AGIL': 'QC Agilent'
         }
         secondary_type_map = {
             'CELC': 'Cell Culture',
+            'CYSF': 'Cyst Fluid',
             'FFRZ': 'Flash Frozen',
             'FRZM': 'Freezing Media',
             'DNA': 'DNA',
             'LEFT': 'Left',
             'RIGHT': 'Right',
             'MAT': 'Maternal',
-            'PAT': 'Paternal'
+            'PAT': 'Paternal',
+            'SUP': 'Supernant',
+            'CELP': 'Cell Pellet',
+            'FFPE': 'FFPE',
         }
         for each in sample_data:
             try:
                 sample_type = type_map[each['U_SAMPLE_TYPE']]
             except:
+                log.debug('Unable to find sample mapping for {0}'.format(
+                    each['U_SAMPLE_TYPE']
+                ))
                 sample_type = ''
             try:
                 typ = secondary_type_map[each['U_SECONDARY_SAMPLE_TYPE']]
                 secondary_type = typ
             except:
+                if each['U_SECONDARY_SAMPLE_TYPE'] != '':
+                    log.debug('Unable to find secondary sample mapping for {0}'.format(
+                        each['U_SECONDARY_SAMPLE_TYPE']
+                    ))
                 secondary_type = ''
 
             each['label'] = '%s %s' % (sample_type, secondary_type)
