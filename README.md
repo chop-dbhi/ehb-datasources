@@ -35,6 +35,8 @@ Which will install the following dependencies:
 * nose-timer>=0.5.0,<1
 * mock>=1.3,<2
 
+`pip install -e .`
+
 Run `make` to run tests for this module.
 
 
