@@ -26,7 +26,16 @@ class ehbDriver(Driver, RequestHandler):
     NAU_ERROR_MAP = {
         '0': 'UNKNOWN ERROR',
         '1': 'Unable to login into LIMS',
-        '8': 'Form data is not valid'
+        '2': 'Username not provided',
+        '3': 'Password not provided',
+        '4': 'Request type not provided',
+        '5': 'Request body not provided',
+        '6': 'Malformed Request',
+        '7': 'Unsupported request type',
+        '8': 'Form data is not valid',
+        '100': 'NAU socket service not found',
+        '101': 'NAU invalid authorization header'
+
     }
 
     def __init__(self, url, user, password, secure):
@@ -175,7 +184,6 @@ class ehbDriver(Driver, RequestHandler):
             'CELN': 'Cell Line',
             'CELLFRZ': 'Cell Freeze',
             'SAL': 'Saliva',
-            'SER' : 'Serum',
             'SLD': 'Slide',
             'LYS': 'Lysate',
             'XEN': 'Xenograft',
