@@ -1,4 +1,8 @@
 
+1.0.4
+  * fixing issue8 - driver execption: adding additional nautilius issue mappings
+  * added additional nautlis mappings -  'SER': 'Serum'
+
 1.0.3
 -----
 * Add additional Nautilus mappings
