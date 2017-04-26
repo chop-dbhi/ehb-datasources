@@ -1,4 +1,6 @@
 import pytest
+import json
+
 
 from ehb_datasources.drivers.nautilus.driver import ehbDriver
 from ehb_datasources.drivers.exceptions import RecordCreationError, \
@@ -235,3 +237,40 @@ def test_process_new_record_form_no_sdg(driver, mocker):
         driver.process_new_record_form(request, 'TESTPREFIX', validator_func)
 
     assert excinfo.typename == 'RecordCreationError'
+
+
+# creating parameratized unit tests for testing error message received from lims
+examples = (('expected_error_message', 'status_error_num', 'test_comment'), [
+    # keeping comments blank because 'error message' in this case is sufficient.
+    # Keeping here for best practices in the future.
+    ('Username not provided', "2", ''),
+    ('Password not provided', "3", ''),
+    ('Request type not provided', "4", ''),
+    ('Request body not provided', "5", ''),
+    ('Malformed Request', "6", ''),
+    ('Unsupported request type', "7", ''),
+    ('Form data is not valid', "8", ''),
+    ('NAU socket service not found', "100", ''),
+    ('NAU invalid authorization header', "101", '')
+])
+
+
+@pytest.mark.parametrize(*examples)
+def test_process_new_record_lims(driver, mocker, expected_error_message, status_error_num, test_comment):
+    request = mocker.MagicMock(
+        method='POST',
+        _post={'SDG_NAME': '7316-118', 'csrfmiddlewaretoken': 'foo', 'label_id': '1'}
+    )
+    payload = [
+        {
+            "status": status_error_num,
+        }
+    ]
+    # using .encode() because fn in driver is expecting bytes
+    driver.update = mocker.MagicMock(return_value=json.dumps(payload).encode())
+    validator_func = mocker.MagicMock(return_value=0)
+    with pytest.raises(RecordCreationError) as excinfo:
+        driver.process_new_record_form(request, 'TESTPREFIX', validator_func)
+
+    assert excinfo.typename == 'RecordCreationError'
+    assert excinfo.value.cause == expected_error_message
