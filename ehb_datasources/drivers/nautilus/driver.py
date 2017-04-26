@@ -184,6 +184,7 @@ class ehbDriver(Driver, RequestHandler):
             'CELN': 'Cell Line',
             'CELLFRZ': 'Cell Freeze',
             'SAL': 'Saliva',
+            'SER': 'Serum',
             'SLD': 'Slide',
             'LYS': 'Lysate',
             'XEN': 'Xenograft',
