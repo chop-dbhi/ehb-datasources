@@ -243,15 +243,15 @@ def test_process_new_record_form_no_sdg(driver, mocker):
 examples = (('expected_error_message', 'status_error_num', 'test_comment'), [
     # keeping comments blank because 'error message' in this case is sufficient.
     # Keeping here for best practices in the future.
-    ('Username not provided', "2", ''),
-    ('Password not provided', "3", ''),
-    ('Request type not provided', "4", ''),
-    ('Request body not provided', "5", ''),
-    ('Malformed Request', "6", ''),
-    ('Unsupported request type', "7", ''),
-    ('Form data is not valid', "8", ''),
-    ('NAU socket service not found', "100", ''),
-    ('NAU invalid authorization header', "101", '')
+    ('Username not provided.', "2", ''),
+    ('Password not provided.', "3", ''),
+    ('Request type not provided.', "4", ''),
+    ('Request body not provided.', "5", ''),
+    ('Malformed Request.', "6", ''),
+    ('Unsupported request type.', "7", ''),
+    ('Form data is not valid.', "8", ''),
+    ('NAU socket service not found.', "100", ''),
+    ('NAU invalid authorization header.', "101", '')
 ])
 
 
