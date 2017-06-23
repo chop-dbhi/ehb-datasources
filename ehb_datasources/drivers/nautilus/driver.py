@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+import codecs
 from collections import OrderedDict
 import urllib.request, urllib.parse, urllib.error
 
@@ -24,17 +25,17 @@ class ehbDriver(Driver, RequestHandler):
     NAU_REC_EXT_REF = 'ext-ref'
     VALID_NAU_ELEM_IDENTIFIERS = [NAU_REC_ID, NAU_REC_NAME, NAU_REC_EXT_REF]
     NAU_ERROR_MAP = {
-        '0': 'UNKNOWN ERROR',
-        '1': 'Unable to login into LIMS',
-        '2': 'Username not provided',
-        '3': 'Password not provided',
-        '4': 'Request type not provided',
-        '5': 'Request body not provided',
-        '6': 'Malformed Request',
-        '7': 'Unsupported request type',
-        '8': 'Form data is not valid',
-        '100': 'NAU socket service not found',
-        '101': 'NAU invalid authorization header'
+        '0': 'UNKNOWN ERROR.',
+        '1': 'Unable to communicate with Laboratory System because of expired or incorrect credentials.',
+        '2': 'Username not provided.',
+        '3': 'Password not provided.',
+        '4': 'Request type not provided.',
+        '5': 'Request body not provided.',
+        '6': 'Malformed Request.',
+        '7': 'Unsupported request type.',
+        '8': 'Form data is not valid.',
+        '100': 'NAU socket service not found.',
+        '101': 'NAU invalid authorization header.'
 
     }
 
@@ -136,8 +137,17 @@ class ehbDriver(Driver, RequestHandler):
         try:
             return json.loads(response)[0]
         except KeyError:
-            log.error('Error retrieving sample data')
-            return {"error": "Unable to retrieve sample data"}
+            try: # grab error number and process error
+                responseDict = json.loads(response)
+                status = responseDict['error']
+                errorMsg = self.NAU_ERROR_MAP.get(status, 'UNKNOWN ERROR')
+                log.error(errorMsg)
+                return {"error": errorMsg}
+            except TypeError:
+                pass
+            except KeyError:
+                log.error('Error retrieving sample data')
+                return {"error": "Unable to retrieve sample data"}
 
     def extract_aliquots(self, sample_data):
         aliquots = []
@@ -278,6 +288,12 @@ class ehbDriver(Driver, RequestHandler):
         c = {
             'aliquots': aliquots,
         }
+        try: # grab error message
+            errorMsg = (sdg['error'])
+            c = {'error': errorMsg}
+            log.error(errorMsg)
+        except:
+            pass
         html = t.render(c)
         return html
 
