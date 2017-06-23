@@ -2,6 +2,7 @@
 1.0.4
   * fixing issue8 - driver execption: adding additional nautilius issue mappings
   * added additional nautlis mappings -  'SER': 'Serum'
+  * added nautlis error messages to biorepository UI
 
 1.0.3
 -----
