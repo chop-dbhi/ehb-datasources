@@ -1,6 +1,5 @@
-
 1.0.5
-* added nautlis error messages to biorepository UI. issue #29
+  * added nautlis error messages to biorepository UI. fixing issue #29
 
 1.0.4
   * fixing issue8 - driver execption: adding additional nautilius issue mappings
