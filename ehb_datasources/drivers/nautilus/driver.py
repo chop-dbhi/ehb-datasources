@@ -36,7 +36,6 @@ class ehbDriver(Driver, RequestHandler):
         '8': 'Form data is not valid.',
         '100': 'NAU socket service not found.',
         '101': 'NAU invalid authorization header.'
-
     }
 
     def __init__(self, url, user, password, secure):
