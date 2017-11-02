@@ -415,15 +415,17 @@ class FormBuilderJson(object):
             ffi[name]={'type':ft}
             field_class="field_input"
             text_field_id="input_"+field.get('field_name')
+            today_button=''
             if field.get('text_validation_type_or_show_slider_number') == 'date_ymd':
                 field_class="field_input_date form-control"
                 text_field_id="date"+text_field_id
                 today_button="""<input type="button" value="Today" class="todaybutton" id="datebtn_{0}" /> <br/>
                              <span style="color:red" class="datespan" id="datespan_{0}"></span>""".format(field.get('field_name'))
-                return """<div class="col-xs-3 date-field"><div class="input-group date"><input style="min-width: 100px;" type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} /><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span></div></div>{5}
-                      """.format(value, name, field_class, text_field_id, onchange, today_button)
-            return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
-                  """.format(value, name, field_class, text_field_id, onchange)
+            return """<div class="date-field"><div class="input-group date"><input style="min-width: 100px;" type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} /><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span></div></div>{5}
+                    """.format(value, name, field_class, text_field_id, onchange, today_button)
+
+            # return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />{5}
+            #       """.format(value, name, field_class, text_field_id, onchange, today_button)
         elif ft == 'notes':
             ffi[name]={'type':ft}
             return """<textarea rows="5" cols="20" name="{0}" class="field_input" {1}>{2}</textarea>
