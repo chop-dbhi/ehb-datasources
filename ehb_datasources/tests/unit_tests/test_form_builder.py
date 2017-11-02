@@ -15,9 +15,6 @@ def test_construct_form(form_builder, redcap_metadata_json, redcap_record_json):
         'baseline_visit_data',
         1,
     )
-
-    print("form: " + form)
-    print("form end")
     assert '0GUQDBCDE0EAWN9Q:8LAG76CHO' not in form
     assert '<div><input class="field_input" type="checkbox"  name="meds___1" value="1" style="margin-top:-1px" checked="checked"/> Antibiotic</div>' in form
     assert '<input style="min-width: 100px;" type="text" value="100" name="height" class="field_input" id="input_height"  />' in form
