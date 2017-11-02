@@ -25,6 +25,7 @@ class ehbDriver(Driver, RequestHandler):
     NAU_REC_EXT_REF = 'ext-ref'
     VALID_NAU_ELEM_IDENTIFIERS = [NAU_REC_ID, NAU_REC_NAME, NAU_REC_EXT_REF]
     NAU_ERROR_MAP = {
+        '': 'UNKNOWN ERROR.',
         '0': 'UNKNOWN ERROR.',
         '1': 'Unable to communicate with Laboratory System because of expired or incorrect credentials.',
         '2': 'Username not provided.',
@@ -35,7 +36,8 @@ class ehbDriver(Driver, RequestHandler):
         '7': 'Unsupported request type.',
         '8': 'Form data is not valid.',
         '100': 'NAU socket service not found.',
-        '101': 'NAU invalid authorization header.'
+        '101': 'NAU invalid authorization header.',
+        '500': 'server error.'
     }
 
     def __init__(self, url, user, password, secure):
@@ -136,17 +138,25 @@ class ehbDriver(Driver, RequestHandler):
         try:
             return json.loads(response)[0]
         except KeyError:
-            try: # grab error number and process error
+            try:  # grab error number and process error
                 responseDict = json.loads(response)
                 status = responseDict['error']
                 errorMsg = self.NAU_ERROR_MAP.get(status, 'UNKNOWN ERROR')
                 log.error(errorMsg)
                 return {"error": errorMsg}
-            except TypeError:
-                pass
-            except KeyError:
+            except (KeyError, TypeError):
                 log.error('Error retrieving sample data')
-                return {"error": "Unable to retrieve sample data"}
+                return {"error": "Unable to retrieve sample data."}
+        except IndexError:
+            if (response == '[]'):
+                log.error('Zero samples returned, validate user has access to protocol in nautilus.')
+                return {"error": "Zero samples returned, validate user has access to protocol in nautilus."}
+            else:
+                log.error('Error retrieving sample data')
+                return {"error": "Unable to retrieve sample data."}
+        except:
+            log.error('Error retrieving sample data')
+            return {"error": "Unable to retrieve sample data."}
 
     def extract_aliquots(self, sample_data):
         aliquots = []
