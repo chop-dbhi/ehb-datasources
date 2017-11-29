@@ -1,0 +1,25 @@
+<div class="container">
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<th>Sample Type</th><th>Status</th>
+			</tr>
+		</thead>
+		<tbody>
+					{% for alq in aliquots %}
+					<tr>
+						<td>{{alq.label}}{% if alq.is_received %}<small class="text-muted"> <small style="font-size:1em"> -- Collected On: {{alq.U_COLLECT_DATE_TIME}} -- Received On: {{alq.U_RECEIVED_DATE_TIME}}</small>{% endif %}<span class="label label-primary pull-right muted">{{alq.NAME}}</span></td><td align="center">{{alq.STATUS|safe}}</td>
+					</tr>
+					{% endfor %}
+
+		</tbody>
+	</table>
+
+{% if error %}
+	<div class="alert alert-danger" role="alert">
+	  <strong>Warning!</strong> {{error}} Please contact the data coordinating center or <a href="mailto:eigsupport@email.chop.edu"> eigsupport@email.chop.edu </a> .
+	</div>
+{% endif %}
+	<br>
+	<br>
+</div>
