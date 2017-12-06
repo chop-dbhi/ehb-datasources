@@ -18,7 +18,7 @@ from ehb_datasources.drivers.exceptions import RecordDoesNotExist,\
 from ehb_datasources.drivers.redcap.formBuilderJson import FormBuilderJson
 from functools import reduce
 
-REDCAP_error; #NEW
+#REDCAP_error; #NEW
 
 
 class GenericDriver(RequestHandler):
@@ -44,6 +44,7 @@ class GenericDriver(RequestHandler):
     FORMAT_CSV = 'csv'
     TYPE_FLAT = 'flat'
     TYPE_EAV = 'eav'
+    global REDCAP_error
 
     # blank/empty values ignored
     OVERWRITE_NORMAL = 'normal'
@@ -135,7 +136,8 @@ class GenericDriver(RequestHandler):
                 #response_xml = xml.parseString(processed_response)
                 # NEW FOR REDCAP Error
                 if "error" in response_string:
-                    global REDCAP_error = response_string
+                    global REDCAP_error
+                    REDCAP_error = response_string
                 else: #from here
                 #THIS IS FOR THE OLD XML REPSONSE RETURN
                 #num_recs_updated = int(
@@ -485,6 +487,7 @@ class ehbDriver(Driver, GenericDriver):
             overwrite=overwrite
         ):
             #raise RecordCreationError(self.url, self.path, study_id, 'Unknown')
+            global REDCAP_error
             raise RecordCreationError(self.url, self.path, study_id, REDCAP_error); #NEW
         else:
             return study_id
