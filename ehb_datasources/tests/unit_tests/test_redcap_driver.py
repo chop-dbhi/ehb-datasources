@@ -170,7 +170,7 @@ def test_create(mocker, driver, redcap_metadata_xml):
     driver.POST.assert_called_with(
         '/api/',
         {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/xml'},
-        'content=record&data=%3C%3Fxml+version%3D%221.0%22+encoding%3D%22UTF-8%22%3F%3E%3Crecords%3E%3Citem%3E%3Cstudy_id%3E%3C%21%5BCDATA%5B0GUQDBCDE0EAWN9Q%3Adeadbeef%5D%5D%3E%3C%2Fstudy_id%3E%3C%2Fitem%3E%3C%2Frecords%3E&format=xml&overwriteBehavior=normal&token=foo&type=flat')
+        'content=record&data=%3C%3Fxml+version%3D%221.0%22+encoding%3D%22UTF-8%22%3F%3E%3Crecords%3E%3Citem%3E%3Cstudy_id%3E%3C%21%5BCDATA%5B0GUQDBCDE0EAWN9Q%3Adeadbeef%5D%5D%3E%3C%2Fstudy_id%3E%3C%2Fitem%3E%3C%2Frecords%3E&format=xml&overwriteBehavior=normal&returnFormat=json&token=foo&type=flat')
 
 
 
