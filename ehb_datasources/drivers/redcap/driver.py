@@ -488,7 +488,7 @@ class ehbDriver(Driver, GenericDriver):
         ):
             #raise RecordCreationError(self.url, self.path, study_id, 'Unknown')
             global REDCAP_error
-            raise RecordCreationError(self.url, self.path, study_id, REDCAP_error); #NEW
+            raise RecordCreationError(self.url, self.path, study_id, REDCAP_error) #NEW
         else:
             return study_id
 
