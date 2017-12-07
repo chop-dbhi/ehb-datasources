@@ -1,0 +1,54 @@
+<table class="table table-bordered table-striped"><thead><tr><th>Record</th><th>Created</th><th>Modified</th></tr></thead><tbody><tr><td><a href="some_url"><span id="1_label">Record</span></a>	<a href="#" data-target="#labelUpdate" data-toggle="modal" data-id=1><span class="" style="font-size:.7em">[edit label]</span></a></td><td>January 01, 2000 00:00:00</td><td>January 02, 2000 00:00:00</td></tr></tbody></table><div class="modal fade" id="labelUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Select a label for this record</h4>
+      </div>
+      <div class="modal-body">
+          <select id="labelUpdateSelect">
+            <option value="1">Some label</option>
+          </select>
+          <div id="pleaseWaitMsg" style="display:none"><p> Please wait for this action to complete. This may take several seconds.</p></div>
+      </div>
+      <div class="modal-footer">
+          <button class="btn btn-small btn-primary" onclick="updateLabel();">Save</button>
+       <button id="confirmModalNoBtn" class="btn btn-small" data-dismiss="modal" >Cancel</a>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+
+<script>
+
+  $('#labelUpdate').on('show.bs.modal', function(event){
+    $("#labelUpdateSelect option[value='1']").attr('selected','selected')
+    var er = $(event.relatedTarget)
+    var er_id = er.data('id')
+    $("#labelUpdateSelect").data('er', er_id)
+  })
+
+  function updateLabel(){
+    var d = {
+      er: $("#labelUpdateSelect").data('er'),
+      label_id: $("#labelUpdateSelect").val(),
+    }
+    if ($("#labelUpdateSelect option:selected").text() != ""){
+      d.label = $("#labelUpdateSelect option:selected").text()
+    } else {
+      d.label = "Record"
+    }
+    $.ajax({
+      type: "POST",
+      url:$(location).attr('pathname'),
+      data: JSON.stringify(d),
+      success: function(data){
+        data = JSON.parse(data)
+        if (data.status == 'ok'){
+          $("#" + d.er + "_label").text(d.label)
+          $("#labelUpdate").modal('toggle')
+        }
+      }
+    });
+  }
+</script>
