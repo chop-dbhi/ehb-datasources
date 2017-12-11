@@ -9,6 +9,12 @@ import xml.dom.minidom as xml
 from xml.parsers.expat import ExpatError
 from collections import OrderedDict
 from jinja2 import Template
+import subprocess
+import sys
+from xml.dom.minidom import parse, parseString
+import requests
+import http.client
+
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
     ImproperArguments
@@ -18,7 +24,7 @@ from ehb_datasources.drivers.exceptions import RecordDoesNotExist,\
 from ehb_datasources.drivers.redcap.formBuilderJson import FormBuilderJson
 from functools import reduce
 
-#REDCAP_error; #NEW
+
 
 
 class GenericDriver(RequestHandler):
@@ -33,6 +39,7 @@ class GenericDriver(RequestHandler):
     Supports imports, exports, and exporting metadata. Currently files are
     not handled.
     '''
+    REDCAP_error = ""
 
     def __init__(self, host, path, token, secure=False):
         super(GenericDriver, self).__init__(host, secure)
@@ -44,7 +51,7 @@ class GenericDriver(RequestHandler):
     FORMAT_CSV = 'csv'
     TYPE_FLAT = 'flat'
     TYPE_EAV = 'eav'
-    global REDCAP_error
+    #global REDCAP_error
 
     # blank/empty values ignored
     OVERWRITE_NORMAL = 'normal'
@@ -125,18 +132,29 @@ class GenericDriver(RequestHandler):
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
         if response.status == 201 or response.status == 200:
             # Record was processed properly
-            processed_response = self.processResponse(response, self.path)
+            #data = response.read()
+            processed_response = response.read()
+
+            #if isinstance (processed_repsponse, str):
+            #    print ("")
+            #elif isinstance(processed_response, int):
+            #    print ("")
+            #else:
+            #    processed_response=processed_repsponse.decode('utf-8')
+            #processed_response = self.processResponse(response, self.path)
             num_recs_updated = -1
             # This is necessary because the REDCap API changed it's response
             # format for record import at REDCap version 4.8
             try:
                 # Grabbing the ouput from the REDCap API
-                response_json = json.loads(processed_response)
+                #processed_response =  str(processed_response).strip("'<>() ").replace('\'', '\"')
+                response_json = json.dumps(processed_response)
+                #response_json = json.loads(processed_response.decode("utf-8"))
                 response_string = str(response_json)
                 #response_xml = xml.parseString(processed_response)
                 # NEW FOR REDCAP Error
                 if "error" in response_string:
-                    global REDCAP_error
+                    #global REDCAP_error
                     REDCAP_error = response_string
                 else: #from here
                 #THIS IS FOR THE OLD XML REPSONSE RETURN
@@ -487,8 +505,11 @@ class ehbDriver(Driver, GenericDriver):
             overwrite=overwrite
         ):
             #raise RecordCreationError(self.url, self.path, study_id, 'Unknown')
-            global REDCAP_error
-            raise RecordCreationError(self.url, self.path, study_id, REDCAP_error) #NEW
+            #global REDCAP_error
+            return ['Record ' + str(study_id) + \
+                ' could not be created at ' + str(self.url) + \
+                ':' + str(self.path) + ' due to: ' + GenericDriver.REDCAP_error]
+            #raise RecordCreationError(self.url, self.path, study_id, GenericDriver.REDCAP_error) #NEW
         else:
             return study_id
 
@@ -953,7 +974,16 @@ class ehbDriver(Driver, GenericDriver):
 
         # Now write the record to REDCap, if successful don't return anything
         try:
-            if 1 != self.write_records(
+
+            if not isinstance(self.write_records(
+                data=record,
+                overwrite=GenericDriver.OVERWRITE_OVERWRITE,
+                useRawData=True
+            ), int):
+                return ['Record could not be created due to: ']
+            # + GenericDriver.REDCAP_error]
+                #raise RecordCreationError(self.url, self.path, study_id, GenericDriver.REDCAP_error)
+            elif 1 != self.write_records(
                 data=record,
                 overwrite=GenericDriver.OVERWRITE_OVERWRITE,
                 useRawData=True
@@ -961,5 +991,7 @@ class ehbDriver(Driver, GenericDriver):
                 return ['Unknown error. REDCap reports multiple records were' +
                         'updated, should have only been 1.']
         except Exception:
-            return ['Parse error. REDCap response is an unknown format.' +
-                    ' Please contact system administrator.']
+            return ['Record could not be created due to: ' ]
+        #+ GenericDriver.REDCAP_error]
+            #return ['Parse error. REDCap response is an unknown format.' +
+            #        ' Please contact system administrator.']
