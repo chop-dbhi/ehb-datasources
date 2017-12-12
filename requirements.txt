@@ -6,3 +6,4 @@
 
 # core requirements
 Jinja2>=2,<3
+-e git+https://github.research.chop.edu/dbhi/eig-OnCore-Client.git@3c838a8080eef0ce65251be6cd5710754b32517a#egg=eig-OnCore-Client
