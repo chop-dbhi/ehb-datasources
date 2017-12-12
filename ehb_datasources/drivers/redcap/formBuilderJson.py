@@ -3,6 +3,9 @@ import json
 from string import Template
 from functools import reduce
 
+from ..Base import RequestHandler
+
+
 import logging
 
 log = logging.getLogger(__name__)
@@ -225,7 +228,9 @@ class FormBuilderJson(object):
         if(data.status == 'error'){
           $("#pleaseWaitModal").modal('hide');
           $("#errorModal").modal('show');
-        }
+          $("h4").after("<p style='color:#F08080'> <br>[ REDCAP ERROR MESSAGE ] <br>" + data.errors +"</p>" );
+          }
+
         else{
           if(next_form_url != ""){
             window.location=next_form_url
