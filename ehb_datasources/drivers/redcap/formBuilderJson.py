@@ -217,6 +217,7 @@ class FormBuilderJson(object):
             }
         }
     })
+
     $.ajax({
       beforeSend: function(xhr, settings) {
         xhr.setRequestHeader("X-CSRFToken", csrf_token);
@@ -227,10 +228,22 @@ class FormBuilderJson(object):
       success: function(data){
         if(data.status == 'error'){
           $("#pleaseWaitModal").modal('hide');
-          $("#errorModal").modal('show');
-          $("h4").after("<p style='color:#F08080'> <br>[ REDCAP ERROR MESSAGE ] <br>" + data.errors +"</p>" );
+
+          //Check to see if error messages exist prior
+          //to remove them
+          var elementExists = document.getElementById("errorMsg");
+          if (elementExists) {
+            var element = document.getElementById("errorMsg");
+            element.parentNode.removeChild(element);
+          }
+          else {
+
           }
 
+          $("#errorModal").modal('show');
+          $("#errorClass").append("<div id='errorMsg'>" + "<p style='color:#F08080'> <br>[ REDCAP ERROR MESSAGE ] <br>" + data.errors + "</p>" + "</div>");
+
+        }
         else{
           if(next_form_url != ""){
             window.location=next_form_url
