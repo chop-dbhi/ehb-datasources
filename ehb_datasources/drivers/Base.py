@@ -259,6 +259,8 @@ class RequestHandler(object):
             self.currentConnection.close()
 
     def processResponse(self, response, path=''):
+
+
         status = response.status
         if status == 200:
             return self.readAndClose(response)
@@ -266,8 +268,10 @@ class RequestHandler(object):
             return self.readAndClose(response)
         elif status == 400:
             msg = response.read()
+            msg = msg.decode ("utf-8")
+            msg = msg.split(',')
             self.closeConnection()
-            raise Exception(msg)
+            raise Exception("You entered " + msg[2] + " for the field " + msg[1]+ ". " + msg [3])
         elif status == 406:
             msg = "The data being imported was formatted incorrectly"
             self.closeConnection()
