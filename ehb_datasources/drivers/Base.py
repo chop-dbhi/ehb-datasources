@@ -265,7 +265,7 @@ class RequestHandler(object):
         elif status == 201:
             return self.readAndClose(response)
         elif status == 400:
-            msg = 'Bad Request: {}'.format(response.read())
+            msg = response.read()
             self.closeConnection()
             raise Exception(msg)
         elif status == 406:
