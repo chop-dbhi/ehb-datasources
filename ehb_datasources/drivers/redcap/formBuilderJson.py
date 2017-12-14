@@ -381,10 +381,7 @@ class FormBuilderJson(object):
                 else: return ''
 
         def fieldNote():
-                #if field.get('field_note'): return field.get('field_note')
-                #else: return ''
-                if field.get('field_note'):
-                    return field.get('field_note')
+                if field.get('field_note'): return field.get('field_note')
                 else: return ''
 
         def fieldValidation():
@@ -416,13 +413,18 @@ class FormBuilderJson(object):
                 'zipcode': '5 or 9 digit zipcode'
                 }
 
+            #if validation note exists for the field
             if field.get('text_validation_type_or_show_slider_number'):
+                #loop through the validation map to find the correct validation msg to show
                 for validation_key, validation_message in redcap_field_validation_map.items():
                     if field.get('text_validation_type_or_show_slider_number') == str(validation_key):
                         return "field value expected is " + str(validation_message)
-
+                #validation doesn't match with any of the keys above.
+                #print the validation note anyways
                 return "field value expected is: " + field.get('text_validation_type_or_show_slider_number')
+            #no validation note exists
             else: return ''
+
         section_header = field.get('section_header')
         header = ''
         radio_reset = ''
@@ -438,15 +440,15 @@ class FormBuilderJson(object):
                   <td><div>{1}</div><div style="color:red; font-size:12px;">{2}</div></td>
                   <td><div>{3}</div><div style="color:blue; font-size:12px;">{4}</div><div style="color:grey; font-size:10px;">{8}</div>{7}</td>
                   </tr>
-               """.format(header,
-                          field.get('field_label'),
-                          isRequired(),
-                          self.build_field(field, record, master_dep_map),
-                          fieldNote(),
-                          field.get('field_name'),
-                          dis,
-                          radio_reset,
-                          fieldValidation()
+               """.format(header, #{0}
+                          field.get('field_label'), #{1}
+                          isRequired(), #{2}
+                          self.build_field(field, record, master_dep_map), #{3}
+                          fieldNote(), #{4}
+                          field.get('field_name'), #{5}
+                          dis,#{6}
+                          radio_reset,#{7}
+                          fieldValidation() #{8}
                    )
 
     def build_fld_on_change_function(self, fld_name, master_dep_map):
@@ -481,11 +483,6 @@ class FormBuilderJson(object):
                              <span style="color:red" class="datespan" id="datespan_{0}"></span>""".format(field.get('field_name'))
                 return """<div class="date-field"><div class="input-group date"><input style="min-width: 100px;" type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} /><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span></div></div>{5}
                         """.format(value, name, field_class, text_field_id, onchange, today_button)
-
-            #if field.get('text_validation_type_or_show_slider_number') == 'alpha_only':
-
-
-
 
             return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
                   """.format(value, name, field_class, text_field_id, onchange, today_button)
