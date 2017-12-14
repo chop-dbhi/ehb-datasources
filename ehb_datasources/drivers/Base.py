@@ -269,9 +269,23 @@ class RequestHandler(object):
         elif status == 400:
             msg = response.read()
             msg = msg.decode ("utf-8")
-            msg = msg.split(',')
-            self.closeConnection()
-            raise Exception("You entered " + msg[2] + " for the field " + msg[1]+ ". " + msg [3])
+            #msg = msg.split(',')
+            if "\n" in msg:
+                msg=msg.split('\n')
+                msgShow =''
+                for error in msg:
+                    error=error.split(',')
+                    msgShow += "You entered " + error[2] + " for the field " + error[1]+ ". " + error [3] + "<br><br>"
+                self.closeConnection()
+                raise Exception (msgShow)
+            else:
+                msg = msg.split(',')
+                self.closeConnection()
+                raise Exception("You entered " + msg[2] + " for the field " + msg[1]+ ". " + msg [3])
+
+                #raise Exception(msg)
+
+            #raise Exception("You entered " + msg[2] + " for the field " + msg[1]+ ". " + msg [3])
         elif status == 406:
             msg = "The data being imported was formatted incorrectly"
             self.closeConnection()
