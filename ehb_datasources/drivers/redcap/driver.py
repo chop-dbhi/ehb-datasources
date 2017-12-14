@@ -957,7 +957,7 @@ class ehbDriver(Driver, GenericDriver):
                 return ['Unknown error. REDCap reports multiple records were' +
                         'updated, should have only been 1.']
         except Exception as error:
-            return ['RECORD COULD NOT BE CREATED. Redcap API returns: ' + repr(error)]
+            return  repr(error)
 
             #return ['Parse error. REDCap response is an unknown format.' +
             #        ' Please contact system administrator.']
