@@ -377,12 +377,23 @@ class FormBuilderJson(object):
 
     def make_tr_for(self, field, record, master_dep_map, apriori_branch_evals):
         def isRequired():
-                if field.get('required_field') and field.get('required_field')=='Y': return '* must provide value'
+                if field.get('required_field') and field.get('required_field')=='y': return '* must provide value'
                 else: return ''
 
         def fieldNote():
-                if field.get('field_note'): return field.get('field_note')
+                #if field.get('field_note'): return field.get('field_note')
+                #else: return ''
+                if field.get('field_note'):
+                    return field.get('field_note')
                 else: return ''
+
+        def validationNote():
+                if field.get('text_validation_type_or_show_slider_number'):
+                    return "field value expected is: " + field.get('text_validation_type_or_show_slider_number')
+                else: return ''
+
+
+
 
         section_header = field.get('section_header')
         header = ''
@@ -397,7 +408,7 @@ class FormBuilderJson(object):
         return """{0}
                   <tr id="{5}" {6}>
                   <td><div>{1}</div><div style="color:red; font-size:12px;">{2}</div></td>
-                  <td><div>{3}</div><div style="color:blue; font-size:12px;">{4}</div>{7}</td>
+                  <td><div>{3}</div><div style="color:blue; font-size:12px;">{4}</div><div style="color:grey; font-size:10px;">{8}</div>{7}</td>
                   </tr>
                """.format(header,
                           field.get('field_label'),
@@ -406,7 +417,8 @@ class FormBuilderJson(object):
                           fieldNote(),
                           field.get('field_name'),
                           dis,
-                          radio_reset
+                          radio_reset,
+                          validationNote()
                    )
 
     def build_fld_on_change_function(self, fld_name, master_dep_map):
@@ -441,6 +453,11 @@ class FormBuilderJson(object):
                              <span style="color:red" class="datespan" id="datespan_{0}"></span>""".format(field.get('field_name'))
                 return """<div class="date-field"><div class="input-group date"><input style="min-width: 100px;" type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} /><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span></div></div>{5}
                         """.format(value, name, field_class, text_field_id, onchange, today_button)
+
+            #if field.get('text_validation_type_or_show_slider_number') == 'alpha_only':
+
+
+
 
             return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
                   """.format(value, name, field_class, text_field_id, onchange, today_button)

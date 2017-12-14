@@ -135,7 +135,6 @@ class GenericDriver(RequestHandler):
             num_recs_updated = -1
             try:
                 response_xml = xml.parseString(processed_response)
-                response_xml = xml.parseString(processed_response)
                 num_recs_updated = int(
                     response_xml.getElementsByTagName(
                         'count'
