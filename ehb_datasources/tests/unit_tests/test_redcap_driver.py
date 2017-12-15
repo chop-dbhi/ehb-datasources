@@ -549,6 +549,7 @@ def test_process_form_badrcresponse(mocker, driver, driver_configuration_long, r
 
     driver.write_records = mocker.MagicMock(side_effect=ServerError)
     errors = driver.processForm(request, external_record, form_spec='0_0')
+    assert 'ServerError()' in errors
     #assert 'Parse error. REDCap response is an unknown format. Please contact system administrator.' in errors
 
 
