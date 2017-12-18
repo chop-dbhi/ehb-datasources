@@ -468,7 +468,10 @@ class ehbDriver(Driver, GenericDriver):
             data=xml.parseString(record),
             overwrite=overwrite
         ):
-            raise RecordCreationError(self.url, self.path, study_id, 'Unknown')
+            errors = self.write_records(
+                data=xml.parseString(record),
+                overwrite=overwrite)
+            raise RecordCreationError(self.url, self.path, study_id, errors)
         else:
             return study_id
 
