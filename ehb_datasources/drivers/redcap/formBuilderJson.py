@@ -434,16 +434,17 @@ class FormBuilderJson(object):
         return """{0}
                   <tr id="{5}" {6}>
                   <td><div>{1}</div><div style="color:red; font-size:12px;">{2}</div></td>
-                  <td><div>{3}</div><div style="color:blue; font-size:12px;">{4}</div>{7}</td>
+                  <td><div>{3}</div><div style="color:blue; font-size:12px;">{4}</div><div style="color:grey; font-size:10px;">{8}</div>{7}</td>
                   </tr>
-               """.format(header,
-                          field.get('field_label'),
-                          isRequired(),
-                          self.build_field(field, record, master_dep_map),
-                          fieldNote(),
-                          field.get('field_name'),
-                          dis,
-                          radio_reset
+               """.format(header, #{0}
+                          field.get('field_label'), #{1}
+                          isRequired(), #{2}
+                          self.build_field(field, record, master_dep_map), #{3}
+                          fieldNote(), #{4}
+                          field.get('field_name'), #{5}
+                          dis,#{6}
+                          radio_reset,#{7}
+                          fieldValidation() #{8}
                    )
 
     def build_fld_on_change_function(self, fld_name, master_dep_map):
