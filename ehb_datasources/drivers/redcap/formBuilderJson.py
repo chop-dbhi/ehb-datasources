@@ -224,6 +224,17 @@ class FormBuilderJson(object):
       success: function(data){
         if(data.status == 'error'){
           $("#pleaseWaitModal").modal('hide');
+
+          //Check to see if error messages exist prior
+          //to remove them
+          var elementExists = document.getElementById("errorMsg");
+          if (elementExists) {
+            var element = document.getElementById("errorMsg");
+            element.parentNode.removeChild(element);
+          }
+          else {
+
+          }
           $("#errorModal").modal('show');
         }
         else{
