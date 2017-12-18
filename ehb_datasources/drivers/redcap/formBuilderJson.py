@@ -235,7 +235,10 @@ class FormBuilderJson(object):
           else {
 
           }
+
           $("#errorModal").modal('show');
+          $("#errorClass").append("<div id='errorMsg'>" + "<p style='color:#F08080'> <br>[ REDCAP ERROR MESSAGE ] <br>" + data.errors + "</p>" + "</div>");
+
         }
         else{
           if(next_form_url != ""){
