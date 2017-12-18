@@ -374,6 +374,7 @@ class FormBuilderJson(object):
     def make_tr_for(self, field, record, master_dep_map, apriori_branch_evals):
         def isRequired():
                 if field.get('required_field') and field.get('required_field')=='y': return '* must provide value'
+                elif field.get('required_field') and field.get('required_field')=='Y': return '* must provide value'
                 else: return ''
 
         def fieldNote():
