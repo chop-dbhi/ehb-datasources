@@ -380,6 +380,47 @@ class FormBuilderJson(object):
                 if field.get('field_note'): return field.get('field_note')
                 else: return ''
 
+        def fieldValidation():
+            redcap_field_validation_map = {
+                'date_dmy': 'YYYY-MM-DD.',
+                'date_mdy': 'YYYY-MM-DD. ',
+                'date_ymd': 'YYYY-MM-DD.',
+                'datetime_dmy': 'YYYY-MM-DD HH:MM (time is in military format)',
+                'datetime_ymd': 'YYYY-MM-DD HH:MM (time is in military format)',
+                'datetime_mdy': 'YYYY-MM-DD HH:MM (time is in military format)',
+                'datetime_seconds_mdy': 'YYYY-MM-DD HH:MM:SS (time is in military format)',
+                'datetime_seconds_ymd': 'YYYY-MM-DD HH:MM:SS (time is in military format) ',
+                'datetime_seconds_dmy': 'YYYY-MM-DD HH:MM:SS (time is in military format) ',
+                'email': 'email@email.com',
+                'integer': 'whole number (no letters or decimal)',
+                'alpha_only': 'letters (no numbers)',
+                'mrn_8d': 'medical record number (8 digits)',
+                'number': 'number (no letters)',
+                'number_1dp': 'number with 1 decimal place #.#',
+                'number_2dp': 'number with 2 decimal place #.##',
+                'number_3dp': 'number with 3 decimal place #.###',
+                'number_4dp': 'number with 4 decimal place #.####',
+                'phone': '10 digit phone number (###)###-####',
+                'ssn': '9 digit social security number ###-##-####',
+                'text_0_150': 'characters (max. 150)',
+                'text_0_200': 'characters (max. 200)',
+                'time': 'time HH:MM (military format)',
+                'time_mm_ss': 'time HH:MM:SS (military format)',
+                'zipcode': '5 or 9 digit zipcode'
+                }
+
+            #if validation note exists for the field
+            if field.get('text_validation_type_or_show_slider_number'):
+                #loop through the validation map to find the correct validation msg to show
+                for validation_key, validation_message in redcap_field_validation_map.items():
+                    if field.get('text_validation_type_or_show_slider_number') == str(validation_key):
+                        return "field value expected is " + str(validation_message)
+                #validation doesn't match with any of the keys above.
+                #print the validation note anyways
+                return "field value expected is: " + field.get('text_validation_type_or_show_slider_number')
+            #no validation note exists
+            else: return ''
+
         section_header = field.get('section_header')
         header = ''
         radio_reset = ''
