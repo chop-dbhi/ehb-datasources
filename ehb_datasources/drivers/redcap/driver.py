@@ -10,7 +10,7 @@ from collections import OrderedDict
 from jinja2 import Template
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
-    ImproperArguments
+    ImproperArguments, ServerError
 from ehb_datasources.drivers.Base import Driver, RequestHandler
 from ehb_datasources.drivers.exceptions import RecordDoesNotExist,\
     RecordCreationError
