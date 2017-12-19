@@ -269,7 +269,7 @@ class RequestHandler(object):
         elif status == 400:
             msg = 'Bad Request: {}'.format(response.read())
             self.closeConnection()
-            raise Exception (msg)
+            raise Exception(msg)
         elif status == 406:
             msg = "The data being imported was formatted incorrectly"
             self.closeConnection()
