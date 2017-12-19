@@ -1,4 +1,3 @@
-
 from abc import ABCMeta, abstractmethod
 from .exceptions import PageNotFound, ServerError
 import datetime
@@ -9,12 +8,9 @@ import string
 import logging
 import re
 import urllib.request, urllib.parse, urllib.error
-
-
 import xml.dom.minidom as xml
 
 log = logging.getLogger('ehb_datasources')
-
 
 class Driver(object, metaclass=ABCMeta):
     '''
