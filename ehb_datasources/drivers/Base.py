@@ -10,6 +10,7 @@ import logging
 import re
 import urllib.request, urllib.parse, urllib.error
 
+
 import xml.dom.minidom as xml
 
 log = logging.getLogger('ehb_datasources')
@@ -259,7 +260,8 @@ class RequestHandler(object):
         if self.currentConnection:
             self.currentConnection.close()
 
-    def processResponse(self, response, path=''):
+    def redcap_processResponse (self, response, path =''):
+        print ("this is the path for processresponse " + path)
         status = response.status
         if status == 200:
             return self.readAndClose(response)
@@ -295,6 +297,32 @@ class RequestHandler(object):
                 #[3] -> error message
                 self.closeConnection()
                 raise Exception("You entered " + msg[2] + " for the field " + msg[1]+ ". " + msg [3])
+        elif status == 406:
+            msg = "The data being imported was formatted incorrectly"
+            self.closeConnection()
+            raise Exception(msg)
+        elif status == 404:
+            self.closeConnection()
+            raise PageNotFound(path=path)
+        elif status == 500:
+            self.closeConnection()
+            raise ServerError
+        else:
+            self.closeConnection()
+            msg = 'Unknown response code from server: {}'.format(status)
+            raise Exception(msg)
+
+    def processResponse(self, response, path=''):
+        print ("this is the path for processresponse " + path)
+        status = response.status
+        if status == 200:
+            return self.readAndClose(response)
+        elif status == 201:
+            return self.readAndClose(response)
+        elif status == 400:
+            msg = 'Bad Request: {}'.format(response.read())
+            self.closeConnection()
+            raise Exception (msg)
         elif status == 406:
             msg = "The data being imported was formatted incorrectly"
             self.closeConnection()

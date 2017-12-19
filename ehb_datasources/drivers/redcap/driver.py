@@ -120,7 +120,7 @@ class GenericDriver(RequestHandler):
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
         if response.status == 201 or response.status == 200:
             # Record was processed properly
-            processed_response = self.processResponse(response, self.path)
+            processed_response = self.redcap_processResponse(response, self.path)
             num_recs_updated = -1
             # This is necessary because the REDCap API changed it's response
             # format for record import at REDCap version 4.8
@@ -140,7 +140,7 @@ class GenericDriver(RequestHandler):
         else:
             # Don't know what happened, let processResponse raise appropriate
             # exception
-            return self.processResponse(response, self.path)
+            return self.redcap_processResponse(response, self.path)
 
     def read_records(self, _format=FORMAT_JSON, _type=TYPE_FLAT,
                      headers=STANDARD_HEADER, rawResponse=False, **kwargs):
@@ -201,7 +201,7 @@ class GenericDriver(RequestHandler):
         else:
             return self.transformResponse(
                 _format,
-                self.processResponse(response, self.path)
+                self.redcap_processResponse(response, self.path)
             )
 
     def read_metadata(self, _format=FORMAT_JSON, headers=STANDARD_HEADER,
@@ -249,7 +249,7 @@ class GenericDriver(RequestHandler):
                 params[item] = self.build_parameter(kwargs.get(item))
 
         params = urllib.parse.urlencode(params).replace('forms', 'forms[]')
-        response = self.processResponse(
+        response = self.redcap_processResponse(
             self.POST(self.path, headers, params),
             self.path
         )
