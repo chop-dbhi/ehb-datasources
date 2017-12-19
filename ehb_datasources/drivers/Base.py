@@ -260,58 +260,6 @@ class RequestHandler(object):
         if self.currentConnection:
             self.currentConnection.close()
 
-    def redcap_processResponse (self, response, path =''):
-        print ("this is the path for processresponse " + path)
-        status = response.status
-        if status == 200:
-            return self.readAndClose(response)
-        elif status == 201:
-            return self.readAndClose(response)
-        elif status == 400:
-            #this means the data being imported isn't formatted correctly
-            #redcap api will return a message
-            msg = response.read()
-            #xml to string
-            msg = msg.decode ("utf-8")
-            #for more than one error, errors are separated by \n
-            if "\n" in msg:
-                msg=msg.split('\n')
-                msgShow =''
-                for error in msg:
-                    error=error.split(',')
-                    #there are 3 parts to error message returned by redcap
-                    #[0] -> user's name
-                    #[1] -> field name
-                    #[2] -> user input
-                    #[3] -> error message
-                    msgShow += "You entered " + error[2] + " for the field " + error[1]+ ". " + error [3] + "<br><br>"
-                self.closeConnection()
-                raise Exception (msgShow)
-            else:
-                #there is only one error message
-                msg = msg.split(',')
-                #there are 3 parts to error message returned by redcap
-                #[0] -> user's name
-                #[1] -> field name
-                #[2] -> user input
-                #[3] -> error message
-                self.closeConnection()
-                raise Exception("You entered " + msg[2] + " for the field " + msg[1]+ ". " + msg [3])
-        elif status == 406:
-            msg = "The data being imported was formatted incorrectly"
-            self.closeConnection()
-            raise Exception(msg)
-        elif status == 404:
-            self.closeConnection()
-            raise PageNotFound(path=path)
-        elif status == 500:
-            self.closeConnection()
-            raise ServerError
-        else:
-            self.closeConnection()
-            msg = 'Unknown response code from server: {}'.format(status)
-            raise Exception(msg)
-
     def processResponse(self, response, path=''):
         print ("this is the path for processresponse " + path)
         status = response.status

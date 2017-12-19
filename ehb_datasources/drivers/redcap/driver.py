@@ -120,7 +120,7 @@ class GenericDriver(RequestHandler):
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
         if response.status == 201 or response.status == 200:
             # Record was processed properly
-            processed_response = self.redcap_processResponse(response, self.path)
+            processed_response = self.processResponse(response, self.path)
             num_recs_updated = -1
             # This is necessary because the REDCap API changed it's response
             # format for record import at REDCap version 4.8
@@ -140,7 +140,7 @@ class GenericDriver(RequestHandler):
         else:
             # Don't know what happened, let processResponse raise appropriate
             # exception
-            return self.redcap_processResponse(response, self.path)
+            return self.processResponse(response, self.path)
 
     def read_records(self, _format=FORMAT_JSON, _type=TYPE_FLAT,
                      headers=STANDARD_HEADER, rawResponse=False, **kwargs):
@@ -201,7 +201,7 @@ class GenericDriver(RequestHandler):
         else:
             return self.transformResponse(
                 _format,
-                self.redcap_processResponse(response, self.path)
+                self.processResponse(response, self.path)
             )
 
     def read_metadata(self, _format=FORMAT_JSON, headers=STANDARD_HEADER,
@@ -249,7 +249,7 @@ class GenericDriver(RequestHandler):
                 params[item] = self.build_parameter(kwargs.get(item))
 
         params = urllib.parse.urlencode(params).replace('forms', 'forms[]')
-        response = self.redcap_processResponse(
+        response = self.processResponse(
             self.POST(self.path, headers, params),
             self.path
         )
@@ -257,6 +257,59 @@ class GenericDriver(RequestHandler):
             return response
         else:
             return self.transformResponse(_format, response)
+
+    # overriding method from Base.py in order to
+    # clean and parse redcap error message
+    def processResponse (self, response, path =''):
+        status = response.status
+        if status == 200:
+            return self.readAndClose(response)
+        elif status == 201:
+            return self.readAndClose(response)
+        elif status == 400:
+            #this means the data being imported isn't formatted correctly
+            #redcap api will return a message
+            msg = response.read()
+            #xml to string
+            msg = msg.decode ("utf-8")
+            #for more than one error, errors are separated by \n
+            if "\n" in msg:
+                msg=msg.split('\n')
+                msgShow =''
+                for error in msg:
+                    error=error.split(',')
+                    #there are 3 parts to error message returned by redcap
+                    #[0] -> user's name
+                    #[1] -> field name
+                    #[2] -> user input
+                    #[3] -> error message
+                    msgShow += "You entered " + error[2] + " for the field " + error[1]+ ". " + error [3] + "<br><br>"
+                self.closeConnection()
+                raise Exception (msgShow)
+            else:
+                #there is only one error message
+                msg = msg.split(',')
+                #there are 3 parts to error message returned by redcap
+                #[0] -> user's name
+                #[1] -> field name
+                #[2] -> user input
+                #[3] -> error message
+                self.closeConnection()
+                raise Exception("You entered " + msg[2] + " for the field " + msg[1]+ ". " + msg [3])
+        elif status == 406:
+            msg = "The data being imported was formatted incorrectly"
+            self.closeConnection()
+            raise Exception(msg)
+        elif status == 404:
+            self.closeConnection()
+            raise PageNotFound(path=path)
+        elif status == 500:
+            self.closeConnection()
+            raise ServerError
+        else:
+            self.closeConnection()
+            msg = 'Unknown response code from server: {}'.format(status)
+            raise Exception(msg)
 
 
 class ehbDriver(Driver, GenericDriver):
