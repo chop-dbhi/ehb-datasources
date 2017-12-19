@@ -261,7 +261,6 @@ class RequestHandler(object):
             self.currentConnection.close()
 
     def processResponse(self, response, path=''):
-        print ("this is the path for processresponse " + path)
         status = response.status
         if status == 200:
             return self.readAndClose(response)
