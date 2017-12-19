@@ -20,7 +20,11 @@ def test_construct_form(form_builder, redcap_metadata_json, redcap_record_json):
     assert '<input type="text" value="100" name="height" class="field_input" id="input_height"  />' in form
     assert '<input type="text" value="20" name="weight" class="field_input" id="input_weight"  />' in form
     assert '<textarea rows="5" cols="20" name="comments" class="field_input" >Test Data2</textarea>' in form
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> rcap_final
 def test_construct_form2_branch_logic_functions(form_builder, redcap_metadata_json2, redcap_record_json2):
     form = form_builder.construct_form(
         json.loads(redcap_metadata_json2.decode('utf-8')),

@@ -8,11 +8,9 @@ import string
 import logging
 import re
 import urllib.request, urllib.parse, urllib.error
-
 import xml.dom.minidom as xml
 
 log = logging.getLogger('ehb_datasources')
-
 
 class Driver(object, metaclass=ABCMeta):
     '''
