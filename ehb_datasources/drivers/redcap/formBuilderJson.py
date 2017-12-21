@@ -407,8 +407,8 @@ class FormBuilderJson(object):
                 'text_0_150': 'characters (max. 150)',
                 'text_0_200': 'characters (max. 200)',
                 'time': 'time HH:MM (military format)',
-                'time_mm_ss': 'time HH:MM:SS (military format)',
-                'zipcode': '5 or 9 digit zipcode'
+                'time_mm_ss': 'time MM:SS',
+                'zipcode': '5 or 9 digit zipcode (#####-####)'
                 }
 
             #if validation note exists for the field
