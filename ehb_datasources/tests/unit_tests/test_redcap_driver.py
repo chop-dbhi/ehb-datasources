@@ -793,9 +793,9 @@ def test_write_records_badresp_400(mocker, driver, redcap_payload):
     MockREDCapResponse = mocker.MagicMock(
         spec=HTTPResponse,
         status=400)
-    utfmessage = "this, is, the, error, message"
-    utfmessage = utfmessage.encode("utf-8")
-    MockREDCapResponse.read = mocker.MagicMock(return_value=utfmessage)
+    redcap_error_msg = "user_name, field_name, user_input, error_message"
+    redcap_error_msg  = redcap_error_msg.encode("utf-8")
+    MockREDCapResponse.read = mocker.MagicMock(return_value=redcap_error_msg)
     driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
     with pytest.raises(Exception) as e_info:
         driver.write_records(
@@ -824,10 +824,10 @@ def test_redcap_process_response_400 (mocker, driver):
     MockREDCapResponse = mocker.MagicMock(
         spec=HTTPResponse,
         status=400)
-    utfmessage = "this, is, the, error, message"
-    utfmessage = utfmessage.encode("utf-8")
-    MockREDCapResponse.read = mocker.MagicMock(return_value=utfmessage)
+    redcap_error_msg = "user_name, field_name, user_input, error_message"
+    redcap_error_msg  = redcap_error_msg.encode("utf-8")
+    MockREDCapResponse.read = mocker.MagicMock(return_value=redcap_error_msg)
     driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
     with pytest.raises(Exception) as e_info:
         processed_response = driver.processResponse(MockREDCapResponse, path='')
-        assert 'You entered  the' in processed_response
+        assert 'You entered  user_input' in processed_response
