@@ -808,36 +808,25 @@ def test_write_records_badresp_400(mocker, driver, redcap_payload):
         {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/xml'},
         'content=record&data=%3Crecords%3E%3Citem%3E%3Cstudy_id%3E%3C%21%5BCDATA%5B0GUQDBCDE0EAWN9Q%3A8LAG76CHO%5D%5D%3E%3C%2Fstudy_id%3E%3Credcap_event_name%3E%3C%21%5BCDATA%5Bvisit_arm_1%5D%5D%3E%3C%2Fredcap_event_name%3E%3Ccolonoscopy_date%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fcolonoscopy_date%3E%3Cgeneral_ibd%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fgeneral_ibd%3E%3Ctransferrin_b%3E%3C%21%5BCDATA%5B102%5D%5D%3E%3C%2Ftransferrin_b%3E%3Cmeds___2%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___2%3E%3Cmeal_date%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fmeal_date%3E%3Culcerative_colitis%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fulcerative_colitis%3E%3Cmeds___1%3E%3C%21%5BCDATA%5B1%5D%5D%3E%3C%2Fmeds___1%3E%3Ccomments%3E%3C%21%5BCDATA%5BTest+Data%5D%5D%3E%3C%2Fcomments%3E%3Cweight%3E%3C%21%5BCDATA%5B20%5D%5D%3E%3C%2Fweight%3E%3Cchrons%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fchrons%3E%3Cchol_b%3E%3C%21%5BCDATA%5B101%5D%5D%3E%3C%2Fchol_b%3E%3Ccolonoscopy%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fcolonoscopy%3E%3Cprealb_b%3E%3C%21%5BCDATA%5B19%5D%5D%3E%3C%2Fprealb_b%3E%3Cheight%3E%3C%21%5BCDATA%5B100%5D%5D%3E%3C%2Fheight%3E%3Ccreat_b%3E%3C%21%5BCDATA%5B0.6%5D%5D%3E%3C%2Fcreat_b%3E%3Cibd_flag%3E%3C%21%5BCDATA%5B1%5D%5D%3E%3C%2Fibd_flag%3E%3Cmeds___5%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___5%3E%3Cmeds___4%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___4%3E%3Cmeds___3%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___3%3E%3C%2Fitem%3E%3C%2Frecords%3E&format=xml&overwriteBehavior=overwrite&token=foo&type=flat'
     )
+    assert "You entered" in str(e_info)
 
-def test_redcap_process_response_raiseExc (mocker, driver):
-    status_codes = [400, 404, 406, 500]
-    redcap_error_msg = "user_name, field_name, user_input, error_message"
-    redcap_error_msg  = redcap_error_msg.encode("utf-8")
 
-    for i in status_codes:
-        MockREDCapResponse = mocker.MagicMock(
-            spec=HTTPResponse,
-            status=i)
-
-        if MockREDCapResponse.status == 400:
-            MockREDCapResponse.read = mocker.MagicMock(return_value=redcap_error_msg)
-            driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
-            with pytest.raises(Exception) as e_info:
-                processed_response = driver.processResponse(MockREDCapResponse, path='')
-            assert 'You entered  user_input' in str(e_info)
-
-        if MockREDCapResponse.status == 404:
-            driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
-            with pytest.raises(PageNotFound):
-                processed_response = driver.processResponse(MockREDCapResponse, path='')
-
-        if MockREDCapResponse.status == 406:
-            driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
-            with pytest.raises(Exception) as e_info:
-                processed_response = driver.processResponse(MockREDCapResponse, path='')
-            assert 'The data being imported was formatted incorrectly' in str(e_info)
-
-        if MockREDCapResponse.status == 500:
-            driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
-            with pytest.raises(ServerError):
-                processed_response = driver.processResponse(MockREDCapResponse, path='')
+redcap_error_msg = "user_name, field_name, user_input, error_message"
+redcap_error_msg  = redcap_error_msg.encode("utf-8")
+status_codes = (("status_code", "return_value", "assert_message"),
+[
+(400, redcap_error_msg, "You entered  user_input"),
+(404, PageNotFound, "PageNotFound"),
+(406, "", "The data being imported was formatted incorrectly"),
+(500, "", "ServerError"),
+])
+@pytest.mark.parametrize(*status_codes)
+def test_redcap_process_response_raiseExc(mocker, driver, status_code, return_value, assert_message):
+    MockREDCapResponse = mocker.MagicMock(
+        spec=HTTPResponse,
+        status=status_code)
+    MockREDCapResponse.read = mocker.MagicMock(return_value=return_value)
+    driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
+    with pytest.raises(Exception) as e_info:
+        processed_response = driver.processResponse(MockREDCapResponse, path='')
+    assert assert_message in str(e_info)
