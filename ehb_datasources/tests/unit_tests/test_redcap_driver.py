@@ -788,3 +788,46 @@ def test_write_records_badresp(mocker, driver, redcap_payload):
         {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/xml'},
         'content=record&data=%3Crecords%3E%3Citem%3E%3Cstudy_id%3E%3C%21%5BCDATA%5B0GUQDBCDE0EAWN9Q%3A8LAG76CHO%5D%5D%3E%3C%2Fstudy_id%3E%3Credcap_event_name%3E%3C%21%5BCDATA%5Bvisit_arm_1%5D%5D%3E%3C%2Fredcap_event_name%3E%3Ccolonoscopy_date%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fcolonoscopy_date%3E%3Cgeneral_ibd%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fgeneral_ibd%3E%3Ctransferrin_b%3E%3C%21%5BCDATA%5B102%5D%5D%3E%3C%2Ftransferrin_b%3E%3Cmeds___2%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___2%3E%3Cmeal_date%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fmeal_date%3E%3Culcerative_colitis%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fulcerative_colitis%3E%3Cmeds___1%3E%3C%21%5BCDATA%5B1%5D%5D%3E%3C%2Fmeds___1%3E%3Ccomments%3E%3C%21%5BCDATA%5BTest+Data%5D%5D%3E%3C%2Fcomments%3E%3Cweight%3E%3C%21%5BCDATA%5B20%5D%5D%3E%3C%2Fweight%3E%3Cchrons%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fchrons%3E%3Cchol_b%3E%3C%21%5BCDATA%5B101%5D%5D%3E%3C%2Fchol_b%3E%3Ccolonoscopy%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fcolonoscopy%3E%3Cprealb_b%3E%3C%21%5BCDATA%5B19%5D%5D%3E%3C%2Fprealb_b%3E%3Cheight%3E%3C%21%5BCDATA%5B100%5D%5D%3E%3C%2Fheight%3E%3Ccreat_b%3E%3C%21%5BCDATA%5B0.6%5D%5D%3E%3C%2Fcreat_b%3E%3Cibd_flag%3E%3C%21%5BCDATA%5B1%5D%5D%3E%3C%2Fibd_flag%3E%3Cmeds___5%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___5%3E%3Cmeds___4%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___4%3E%3Cmeds___3%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___3%3E%3C%2Fitem%3E%3C%2Frecords%3E&format=xml&overwriteBehavior=overwrite&token=foo&type=flat'
     )
+
+def test_write_records_badresp_400(mocker, driver, redcap_payload):
+    MockREDCapResponse = mocker.MagicMock(
+        spec=HTTPResponse,
+        status=400)
+    utfmessage = "this, is, the, error, message"
+    utfmessage = utfmessage.encode("utf-8")
+    MockREDCapResponse.read = mocker.MagicMock(return_value=utfmessage)
+    driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
+    with pytest.raises(Exception) as e_info:
+        driver.write_records(
+            data=redcap_payload,
+            overwrite=driver.OVERWRITE_OVERWRITE,
+            useRawData=True
+        )
+    driver.POST.assert_called_with(
+        '/api/',
+        {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/xml'},
+        'content=record&data=%3Crecords%3E%3Citem%3E%3Cstudy_id%3E%3C%21%5BCDATA%5B0GUQDBCDE0EAWN9Q%3A8LAG76CHO%5D%5D%3E%3C%2Fstudy_id%3E%3Credcap_event_name%3E%3C%21%5BCDATA%5Bvisit_arm_1%5D%5D%3E%3C%2Fredcap_event_name%3E%3Ccolonoscopy_date%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fcolonoscopy_date%3E%3Cgeneral_ibd%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fgeneral_ibd%3E%3Ctransferrin_b%3E%3C%21%5BCDATA%5B102%5D%5D%3E%3C%2Ftransferrin_b%3E%3Cmeds___2%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___2%3E%3Cmeal_date%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fmeal_date%3E%3Culcerative_colitis%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fulcerative_colitis%3E%3Cmeds___1%3E%3C%21%5BCDATA%5B1%5D%5D%3E%3C%2Fmeds___1%3E%3Ccomments%3E%3C%21%5BCDATA%5BTest+Data%5D%5D%3E%3C%2Fcomments%3E%3Cweight%3E%3C%21%5BCDATA%5B20%5D%5D%3E%3C%2Fweight%3E%3Cchrons%3E%3C%21%5BCDATA%5B2016-08-31%5D%5D%3E%3C%2Fchrons%3E%3Cchol_b%3E%3C%21%5BCDATA%5B101%5D%5D%3E%3C%2Fchol_b%3E%3Ccolonoscopy%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fcolonoscopy%3E%3Cprealb_b%3E%3C%21%5BCDATA%5B19%5D%5D%3E%3C%2Fprealb_b%3E%3Cheight%3E%3C%21%5BCDATA%5B100%5D%5D%3E%3C%2Fheight%3E%3Ccreat_b%3E%3C%21%5BCDATA%5B0.6%5D%5D%3E%3C%2Fcreat_b%3E%3Cibd_flag%3E%3C%21%5BCDATA%5B1%5D%5D%3E%3C%2Fibd_flag%3E%3Cmeds___5%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___5%3E%3Cmeds___4%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___4%3E%3Cmeds___3%3E%3C%21%5BCDATA%5B0%5D%5D%3E%3C%2Fmeds___3%3E%3C%2Fitem%3E%3C%2Frecords%3E&format=xml&overwriteBehavior=overwrite&token=foo&type=flat'
+    )
+
+
+def test_redcap_process_response_406 (mocker, driver):
+    MockREDCapResponse = mocker.MagicMock(
+        spec=HTTPResponse,
+        status=406)
+    driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
+    with pytest.raises(Exception) as e_info:
+        processed_response = driver.processResponse(MockREDCapResponse, path='')
+        assert 'The data being imported was formatted incorrectly' in processed_response
+
+
+def test_redcap_process_response_400 (mocker, driver):
+    MockREDCapResponse = mocker.MagicMock(
+        spec=HTTPResponse,
+        status=400)
+    utfmessage = "this, is, the, error, message"
+    utfmessage = utfmessage.encode("utf-8")
+    MockREDCapResponse.read = mocker.MagicMock(return_value=utfmessage)
+    driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
+    with pytest.raises(Exception) as e_info:
+        processed_response = driver.processResponse(MockREDCapResponse, path='')
+        assert 'You entered  the' in processed_response
