@@ -108,7 +108,7 @@ class ehbDriver(Driver, RequestHandler):
         nau_creds = self.encode_nau_creds()
         headers = {
             'Accept': 'application/json',
-            'NAUTILUS_CREDS': nau_creds,
+            'NAUTILUS-CREDS': nau_creds,
             'Content-Type': 'application/json'
         }
         full_path = self.path + nau_sub_path
@@ -127,7 +127,7 @@ class ehbDriver(Driver, RequestHandler):
         nau_creds = self.encode_nau_creds()
         headers = {
             'Accept': 'application/json',
-            'NAUTILUS_CREDS': nau_creds,
+            'NAUTILUS-CREDS': nau_creds,
             'Content-Type': 'application/json'
         }
         full_path = self.path + 'sdg'
@@ -372,12 +372,17 @@ class ehbDriver(Driver, RequestHandler):
                 nau_sub_path='sdg'
             )
             status = json.loads(response.decode('utf-8'))[0].get('status')
-            if not status == '200':
+            print("status:")
+            print(status)
+            print("did this code change?")
+            if not status == 200:
+                print("django is saying that status does not equal 200")
                 msg = self.NAU_ERROR_MAP.get(status, 'UNKNOWN ERROR')
                 raise RecordCreationError(url=self.url,
                                           path='/api/sdg/',
                                           record_id='',
                                           cause=msg)
+
             # This is a hack until the BRP can create records in Nautilus
             raise IgnoreEhbExceptions(record_id=sdg_name)
         else:
