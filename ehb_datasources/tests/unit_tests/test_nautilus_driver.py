@@ -38,7 +38,7 @@ def test_update(driver, mocker):
     response = driver.update(kwargs)
     driver.PUT.assert_called_with(
         '/api/',
-        {'Content-Type': 'application/json', 'NAUTILUS_CREDS': 'Basic Zm9vOmJhcg==', 'Accept': 'application/json'},
+        {'Content-Type': 'application/json', 'NAUTILUS-CREDS': 'Basic Zm9vOmJhcg==', 'Accept': 'application/json'},
         '[{"null": null, "fldvals": {}}]'
     )
     assert response == b'[\n    {\n        "name": "7316-118", \n        "status": "200", \n        "type": "SDG"\n    }\n]'
@@ -57,7 +57,7 @@ def test_update_fix_path(driver, mocker):
     response = driver.update(kwargs)
     driver.PUT.assert_called_with(
         '/api/',
-        {'Content-Type': 'application/json', 'NAUTILUS_CREDS': 'Basic Zm9vOmJhcg==', 'Accept': 'application/json'},
+        {'Content-Type': 'application/json', 'NAUTILUS-CREDS': 'Basic Zm9vOmJhcg==', 'Accept': 'application/json'},
         '[{"null": null, "fldvals": {}}]'
     )
     assert response == b'[\n    {\n        "name": "7316-118", \n        "status": "200", \n        "type": "SDG"\n    }\n]'
