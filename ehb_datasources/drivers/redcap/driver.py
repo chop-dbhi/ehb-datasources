@@ -259,10 +259,12 @@ class GenericDriver(RequestHandler):
             self.path
         )
         print ("this is read meta data response1")
-        print (response)
+        print (response[1:100])
         if rawResponse:
+            print ("we are in print raw reponse")
             return response
         else:
+            print ("we are calling transform response")
             return self.transformResponse(_format, response)
 
     # overriding method from Base.py in order to
@@ -464,6 +466,8 @@ class ehbDriver(Driver, GenericDriver):
 
         '''
 
+        print ("we are in create, line 469")
+
         def validate_id(pid):
             try:
                 x = None
@@ -496,7 +500,10 @@ class ehbDriver(Driver, GenericDriver):
             )
 
         meta_data = self.meta(_format=self.FORMAT_XML)
+        print ("we've called meta in xml 501")
         records = meta_data.getElementsByTagName('records')
+        print ("this is records in line 505")
+        print (records)
 
         if records and len(records) == 1:
             # it is assumed that the first item in the meta data is the
@@ -512,10 +519,12 @@ class ehbDriver(Driver, GenericDriver):
             raise Exception('Unable to obtain meta_data')
 
         if event:
+            print ("we are in line 517")
             record = '<records><item><' + id_label + '><![CDATA[' + study_id +\
                 ']]></' + id_label + '><redcap_event_name><![CDATA[' + event +\
                 ']]></redcap_event_name>'
         else:
+            print ("we are in line 521")
             record = '<records><item><' + id_label + '><![CDATA[' + study_id +\
                 ']]></' + id_label + '>'
 
@@ -524,6 +533,9 @@ class ehbDriver(Driver, GenericDriver):
                 record += '<' + k + '><![CDATA[' + v + ']]></' + k + '>'
 
         record += '</item></records>'
+
+        print ("we are in line 535")
+        print (record)
 
         if 1 != self.write_records(
             data=xml.parseString(record),
@@ -736,6 +748,7 @@ class ehbDriver(Driver, GenericDriver):
         names which improves save time performance
         '''
 
+        print ("we are calling subrecord form, line 744")
         er = external_record
 
         # make sure the proper information has been provided and that configure
@@ -782,7 +795,7 @@ class ehbDriver(Driver, GenericDriver):
 
         meta_raw = self.meta(_format=self.FORMAT_JSON, rawResponse=True)
 
-        meta_raw = meta_raw[:-3]
+        meta_raw = meta_raw[:-200]
         print ("this is meta_raw without last 3")
         # print (meta_raw)
 
@@ -790,18 +803,18 @@ class ehbDriver(Driver, GenericDriver):
 
         #meta_data_field_to_add_bytes = encode(meta_data_field_to_add, "utf-8")
 
-        meta_raw += meta_data_field_to_add
+        # meta_raw += meta_data_field_to_add
 
-        print ("this is the field")
+        # print ("this is the field")
         # print (meta_data_field_to_add_bytes)
         print ("this is new meta raw")
-        print (meta_raw)
+        print (meta_raw[1:100])
 
-        # meta_data = self.raw_to_json(self.meta(
-        #     _format=self.FORMAT_JSON,
-        #     rawResponse=True)
-        # )
-        meta_data = self.raw_to_json(meta_raw)
+        meta_data = self.raw_to_json(self.meta(
+            _format=self.FORMAT_JSON,
+            rawResponse=True)
+        )
+        # meta_data = self.raw_to_json(meta_raw)
 
         # meta_data_field_to_add = "{'field_name':'"+form_name+"_completion','form_name':'"+form_name+"','section_header':'','field_type':”radio','field_label':”Form Status','select_choices_or_calculations':''1,  | 2, Incomplete | 3, Unverified | 4, Complete','field_note':'','text_validation_type_or_show_slider_number':'','text_validation_min':'','text_validation_max':'','identifier':'','branching_logic':'','required_field':”n','custom_alignment':'','question_number':'','matrix_group_name':'','matrix_ranking':'','field_annotation':''}"
         #
@@ -998,6 +1011,8 @@ class ehbDriver(Driver, GenericDriver):
             )
         else:
             # Use meta data from REDCap
+            print ("in line 1014, we are calling meta")
+
             meta_data = self.meta(_format=self.FORMAT_XML, forms=[form_name])
             # Try to figure out the id field from the metadata
             # It is assumed that the first item is the record id field
