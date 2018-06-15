@@ -236,10 +236,6 @@ class RequestHandler(object):
                 (datetime.datetime.now() - ts).microseconds/1000)
         )
 
-        print ("THIS IS THE REQUEST")
-        print (path)
-        # print (body)
-
         r = c.getresponse()
 
         return r
@@ -290,6 +286,14 @@ class RequestHandler(object):
         self.closeConnection()
         return rd
 
+    def raw_to_json2(self, rawstring):
+        try:
+            # return json.loads(raw_string)
+            return json.loads(rawstring)
+        except:
+            raise
+
+
     def raw_to_json(self, raw_string):
         def controls_repl(matchobj):
             if matchobj.group(1) == '\r':
@@ -299,9 +303,6 @@ class RequestHandler(object):
 
         def non_controls_repl(matchobj):
             return matchobj.group(1)
-
-
-
 
         try:
             # return json.loads(raw_string)
