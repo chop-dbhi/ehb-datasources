@@ -243,9 +243,14 @@ class GenericDriver(RequestHandler):
             _format
         }
         params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
+        print ("we are in read metadata")
 
         for item in ['fields', 'forms']:
             if kwargs.get(item):
+                print ("this is the item")
+                print (item)
+                print ("this is the item 2")
+                print (kwargs.get(item))
                 params[item] = self.build_parameter(kwargs.get(item))
 
         params = urllib.parse.urlencode(params).replace('forms', 'forms[]')
@@ -253,6 +258,8 @@ class GenericDriver(RequestHandler):
             self.POST(self.path, headers, params),
             self.path
         )
+        print ("this is read meta data response1")
+        print (response)
         if rawResponse:
             return response
         else:
@@ -350,6 +357,7 @@ class ehbDriver(Driver, GenericDriver):
 
     def meta(self, *args, **kwargs):
         '''returns meta data'''
+        print ("we are in meta")
         return self.read_metadata(**kwargs)
 
     def get(self, record_id=None, *args, **kwargs):
@@ -696,6 +704,8 @@ class ehbDriver(Driver, GenericDriver):
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
 
+
+
     def subRecordForm(self, external_record, form_spec='', *args, **kwargs):
         '''
         Generates a REDCap data entry form for a specific ExternalRecord and
@@ -763,10 +773,44 @@ class ehbDriver(Driver, GenericDriver):
         # need to get the meta data from REDCAp to construct the form and the
         # record to populate previously entered values
         form_builder = FormBuilderJson()
-        meta_data = self.raw_to_json(self.meta(
-            _format=self.FORMAT_JSON,
-            rawResponse=True)
-        )
+
+        # print ("this is the metadata in raw format")
+        # metadata= (self.meta(
+        #     _format=self.FORMAT_JSON,
+        #     rawResponse=True))
+        # print (metadata)
+
+        meta_raw = self.meta(_format=self.FORMAT_JSON, rawResponse=True)
+
+        meta_raw = meta_raw[:-3]
+        print ("this is meta_raw without last 3")
+        # print (meta_raw)
+
+        meta_data_field_to_add = ",'field_name':'"+form_name+"_completion','form_name':'"+form_name+"','section_header':'','field_type':”radio','field_label':”Form Status','select_choices_or_calculations':''1,  | 2, Incomplete | 3, Unverified | 4, Complete','field_note':'','text_validation_type_or_show_slider_number':'','text_validation_min':'','text_validation_max':'','identifier':'','branching_logic':'','required_field':”n','custom_alignment':'','question_number':'','matrix_group_name':'','matrix_ranking':'','field_annotation':''}]'"
+
+        #meta_data_field_to_add_bytes = encode(meta_data_field_to_add, "utf-8")
+
+        meta_raw += meta_data_field_to_add
+
+        print ("this is the field")
+        # print (meta_data_field_to_add_bytes)
+        print ("this is new meta raw")
+        print (meta_raw)
+
+        # meta_data = self.raw_to_json(self.meta(
+        #     _format=self.FORMAT_JSON,
+        #     rawResponse=True)
+        # )
+        meta_data = self.raw_to_json(meta_raw)
+
+        # meta_data_field_to_add = "{'field_name':'"+form_name+"_completion','form_name':'"+form_name+"','section_header':'','field_type':”radio','field_label':”Form Status','select_choices_or_calculations':''1,  | 2, Incomplete | 3, Unverified | 4, Complete','field_note':'','text_validation_type_or_show_slider_number':'','text_validation_min':'','text_validation_max':'','identifier':'','branching_logic':'','required_field':”n','custom_alignment':'','question_number':'','matrix_group_name':'','matrix_ranking':'','field_annotation':''}"
+        #
+        # meta_data += self.raw_to_json(meta_data_field_to_add)
+
+        # print ("THIS IS THE METADATA")
+        # print (meta_data)
+
+
         session = kwargs.get('session', None)
 
         if self.form_names:
