@@ -109,6 +109,9 @@ class GenericDriver(RequestHandler):
         else:
             req_data = data.toxml('UTF-8')
 
+        print ("this is req data")
+        print (req_data)
+
         headers['Accept'] = 'text/xml'
         params = {
             'token': self.token,
@@ -503,10 +506,8 @@ class ehbDriver(Driver, GenericDriver):
 
 
         meta_data = self.meta(_format=self.FORMAT_XML)
-        print ("we've called meta in xml 501")
         records = meta_data.getElementsByTagName('records')
-        print ("this is records in line 505")
-        print (records)
+
 
         if records and len(records) == 1:
             # it is assumed that the first item in the meta data is the
@@ -537,8 +538,6 @@ class ehbDriver(Driver, GenericDriver):
 
         record += '</item></records>'
 
-        print ("we are in line 535")
-        print (record)
 
         if 1 != self.write_records(
             data=xml.parseString(record),
@@ -796,12 +795,12 @@ class ehbDriver(Driver, GenericDriver):
             rawResponse=True))
 
         print ("THIS IS META DATA WITHOUT FORMATTING")
-        print (meta_data)
+        # print (meta_data)
 
         meta_data = json.dumps(meta_data)
         # meta_data = str(meta_data)
         print ("this is meta data as string")
-        print (meta_data)
+        # print (meta_data)
 
         # meta_xml = self.meta(_format=self.FORMAT_XML, rawResponse=False)
         # print ("THIS IS THE META XML")
@@ -819,9 +818,9 @@ class ehbDriver(Driver, GenericDriver):
 
         meta_data = meta_data[:-1]
         print ("this is meta data concatenated3")
-        print (meta_data)
+        # print (meta_data)
 
-        meta_data_field_to_add = ', {"field_name": "' + form_name + '_completion", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "1, Incomplete | 2, Unverified | 3, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
+        meta_data_field_to_add = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
 
         # meta_data_field_to_add = ", 'field_name': '" + form_name + "_completion', 'form_name': '" + form_name + "', 'section_header': '', 'field_type': 'radio', 'field_label': '', 'select_choices_or_calculations': '1, | 2, Incomplete | 3, Unverified | 4, Complete', 'field_note': '', 'text_validation_type_or_show_slider_number': '', 'text_validation_min': '', 'text_validation_max': '', 'identifier': '', 'branching_logic': '', 'required_field': '', 'custom_alignment': '', 'question_number': '', 'matrix_group_name': '', 'matrix_ranking': '', 'field_annotation': ''}]"
 
@@ -830,7 +829,7 @@ class ehbDriver(Driver, GenericDriver):
         meta_data += meta_data_field_to_add
 
         print ("this is new meta data3")
-        print (meta_data)
+        # print (meta_data)
 
         meta_data=json.loads(meta_data)
 
