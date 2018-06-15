@@ -247,10 +247,6 @@ class GenericDriver(RequestHandler):
 
         for item in ['fields', 'forms']:
             if kwargs.get(item):
-                print ("this is the item")
-                print (item)
-                print ("this is the item 2")
-                print (kwargs.get(item))
                 params[item] = self.build_parameter(kwargs.get(item))
 
         params = urllib.parse.urlencode(params).replace('forms', 'forms[]')
@@ -258,13 +254,18 @@ class GenericDriver(RequestHandler):
             self.POST(self.path, headers, params),
             self.path
         )
-        print ("this is read meta data response1")
-        print (response[1:100])
+
+
+        # print ("this is read meta data response1")
+        # print (response[1:100])
         if rawResponse:
             print ("we are in print raw reponse")
             return response
         else:
             print ("we are calling transform response")
+            print ("result of transform")
+            result_of_transform = self.transformResponse(_format, response)
+            print (result_of_transform)
             return self.transformResponse(_format, response)
 
     # overriding method from Base.py in order to
@@ -359,7 +360,6 @@ class ehbDriver(Driver, GenericDriver):
 
     def meta(self, *args, **kwargs):
         '''returns meta data'''
-        print ("we are in meta")
         return self.read_metadata(**kwargs)
 
     def get(self, record_id=None, *args, **kwargs):
@@ -498,6 +498,7 @@ class ehbDriver(Driver, GenericDriver):
                 'redcap.ehbDriver.create',
                 ['study_id', 'redcap_event_name', 'form_names']
             )
+
 
         meta_data = self.meta(_format=self.FORMAT_XML)
         print ("we've called meta in xml 501")
@@ -787,33 +788,47 @@ class ehbDriver(Driver, GenericDriver):
         # record to populate previously entered values
         form_builder = FormBuilderJson()
 
-        # print ("this is the metadata in raw format")
-        # metadata= (self.meta(
-        #     _format=self.FORMAT_JSON,
-        #     rawResponse=True))
-        # print (metadata)
-
-        meta_raw = self.meta(_format=self.FORMAT_JSON, rawResponse=True)
-
-        meta_raw = meta_raw[:-200]
-        print ("this is meta_raw without last 3")
-        # print (meta_raw)
-
-        meta_data_field_to_add = ",'field_name':'"+form_name+"_completion','form_name':'"+form_name+"','section_header':'','field_type':”radio','field_label':”Form Status','select_choices_or_calculations':''1,  | 2, Incomplete | 3, Unverified | 4, Complete','field_note':'','text_validation_type_or_show_slider_number':'','text_validation_min':'','text_validation_max':'','identifier':'','branching_logic':'','required_field':”n','custom_alignment':'','question_number':'','matrix_group_name':'','matrix_ranking':'','field_annotation':''}]'"
-
-        #meta_data_field_to_add_bytes = encode(meta_data_field_to_add, "utf-8")
-
-        # meta_raw += meta_data_field_to_add
-
-        # print ("this is the field")
-        # print (meta_data_field_to_add_bytes)
-        print ("this is new meta raw")
-        print (meta_raw[1:100])
 
         meta_data = self.raw_to_json(self.meta(
             _format=self.FORMAT_JSON,
-            rawResponse=True)
-        )
+            rawResponse=True))
+
+        print ("THIS IS META DATA WITHOUT FORMATTING")
+        print (meta_data)
+
+        meta_data = json.dumps(meta_data)
+        print ("this is meta data as string")
+        print (meta_data)
+
+        # meta_xml = self.meta(_format=self.FORMAT_XML, rawResponse=False)
+        # print ("THIS IS THE META XML")
+        #
+        # records = meta_data.getElementsByTagName('records')
+        #
+        # to_add = len(records)
+        #
+        # meta_data_field_to_add = "<item><field_name><![CDATA[" + form_name + "_completion]]></field_name><form_name><![CDATA[" + form_name + "]]></form_name><section_header></section_header><field_type><![CDATA[text]]></field_type><field_label><![CDATA[Study Subject ID]]></field_label><select_choices_or_calculations></select_choices_or_calculations><field_note></field_note><text_validation_type_or_show_slider_number></text_validation_type_or_show_slider_number><text_validation_min></text_validation_min><text_validation_max></text_validation_max><identifier></identifier><branching_logic></branching_logic><required_field><![CDATA[y]]></required_field><custom_alignment></custom_alignment><question_number></question_number><matrix_group_name></matrix_group_name><matrix_ranking></matrix_ranking><field_annotation></field_annotation></item>\n</records>\n'"
+        #
+        # meta_data_field_to_add_xml = xml.parseString(meta_data_field_to_add)
+        #
+        #
+        # records[to_add] = meta_data_field_to_add_xml
+
+        meta_data = meta_data[:1]
+
+
+        meta_data_field_to_add = ", 'field_name': '" + form_name + "_completion', 'form_name': '" + form_name + "', 'section_header': '', 'field_type': 'radio', 'field_label': '', 'select_choices_or_calculations': '1, | 2, Incomplete | 3, Unverified | 4, Complete', 'field_note': '', 'text_validation_type_or_show_slider_number': '', 'text_validation_min': '', 'text_validation_max': '', 'identifier': '', 'branching_logic': '', 'required_field': '', 'custom_alignment': '', 'question_number': '', 'matrix_group_name': '', 'matrix_ranking': '', 'field_annotation': ''}]"
+
+        # meta_data_field_to_add = meta_data_field_to_add.decode('utf-8')
+        # meta_data_field_to_add = self.raw_to_json2 (meta_data_field_to_add)
+        meta_data += meta_data_field_to_add
+
+        print ("this is new meta data")
+        print (meta_data)
+
+
+
+        # meta_data = self.raw_to_json(meta_xml)
         # meta_data = self.raw_to_json(meta_raw)
 
         # meta_data_field_to_add = "{'field_name':'"+form_name+"_completion','form_name':'"+form_name+"','section_header':'','field_type':”radio','field_label':”Form Status','select_choices_or_calculations':''1,  | 2, Incomplete | 3, Unverified | 4, Complete','field_note':'','text_validation_type_or_show_slider_number':'','text_validation_min':'','text_validation_max':'','identifier':'','branching_logic':'','required_field':”n','custom_alignment':'','question_number':'','matrix_group_name':'','matrix_ranking':'','field_annotation':''}"
