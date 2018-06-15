@@ -102,6 +102,8 @@ class GenericDriver(RequestHandler):
         * Integer -- number of records created
 
         '''
+        print ("we are in write record")
+
         if useRawData:
             req_data = data
         else:
@@ -797,6 +799,7 @@ class ehbDriver(Driver, GenericDriver):
         print (meta_data)
 
         meta_data = json.dumps(meta_data)
+        # meta_data = str(meta_data)
         print ("this is meta data as string")
         print (meta_data)
 
@@ -814,17 +817,22 @@ class ehbDriver(Driver, GenericDriver):
         #
         # records[to_add] = meta_data_field_to_add_xml
 
-        meta_data = meta_data[:1]
+        meta_data = meta_data[:-1]
+        print ("this is meta data concatenated3")
+        print (meta_data)
 
+        meta_data_field_to_add = ', {"field_name": "' + form_name + '_completion", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "1, Incomplete | 2, Unverified | 3, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
 
-        meta_data_field_to_add = ", 'field_name': '" + form_name + "_completion', 'form_name': '" + form_name + "', 'section_header': '', 'field_type': 'radio', 'field_label': '', 'select_choices_or_calculations': '1, | 2, Incomplete | 3, Unverified | 4, Complete', 'field_note': '', 'text_validation_type_or_show_slider_number': '', 'text_validation_min': '', 'text_validation_max': '', 'identifier': '', 'branching_logic': '', 'required_field': '', 'custom_alignment': '', 'question_number': '', 'matrix_group_name': '', 'matrix_ranking': '', 'field_annotation': ''}]"
+        # meta_data_field_to_add = ", 'field_name': '" + form_name + "_completion', 'form_name': '" + form_name + "', 'section_header': '', 'field_type': 'radio', 'field_label': '', 'select_choices_or_calculations': '1, | 2, Incomplete | 3, Unverified | 4, Complete', 'field_note': '', 'text_validation_type_or_show_slider_number': '', 'text_validation_min': '', 'text_validation_max': '', 'identifier': '', 'branching_logic': '', 'required_field': '', 'custom_alignment': '', 'question_number': '', 'matrix_group_name': '', 'matrix_ranking': '', 'field_annotation': ''}]"
 
         # meta_data_field_to_add = meta_data_field_to_add.decode('utf-8')
         # meta_data_field_to_add = self.raw_to_json2 (meta_data_field_to_add)
         meta_data += meta_data_field_to_add
 
-        print ("this is new meta data")
+        print ("this is new meta data3")
         print (meta_data)
+
+        meta_data=json.loads(meta_data)
 
 
 
