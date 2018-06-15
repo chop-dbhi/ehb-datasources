@@ -236,6 +236,10 @@ class RequestHandler(object):
                 (datetime.datetime.now() - ts).microseconds/1000)
         )
 
+        print ("THIS IS THE REQUEST")
+        print (path)
+        # print (body)
+
         r = c.getresponse()
 
         return r
@@ -296,7 +300,11 @@ class RequestHandler(object):
         def non_controls_repl(matchobj):
             return matchobj.group(1)
 
+
+
+
         try:
+            # return json.loads(raw_string)
             return json.loads(raw_string.decode('utf-8', 'backslashreplace'))
         except:
             raise
