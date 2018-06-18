@@ -8,6 +8,7 @@ import xml.dom.minidom as xml
 from xml.parsers.expat import ExpatError
 from collections import OrderedDict
 from jinja2 import Template
+import http.client
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
     ImproperArguments, ServerError
@@ -149,6 +150,7 @@ class GenericDriver(RequestHandler):
 
     def read_records(self, _format=FORMAT_JSON, _type=TYPE_FLAT,
                      headers=STANDARD_HEADER, rawResponse=False, **kwargs):
+
         '''
         Attempts to read records from the REDCap project associated with the
         current token.
@@ -185,6 +187,7 @@ class GenericDriver(RequestHandler):
             Unique Event Name should be exported default is label
 
         '''
+        print (" we are in read records, 189")
         params = {
             'token': self.token,
             'content': self.CONTENT_RECORD,
@@ -197,13 +200,21 @@ class GenericDriver(RequestHandler):
             if kwargs.get(item):
                 params[item] = self.build_parameter(kwargs.get(item))
 
+
         if kwargs.get('event'):
             params['event'] = kwargs.get('event')
 
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
+
+        print ("this is response, 208-2")
+        print (response)
+
         if rawResponse:
             return response
         else:
+            print (" we are in transform 215")
+            # print (response)
+
             return self.transformResponse(
                 _format,
                 self.processResponse(response, self.path)
@@ -399,10 +410,16 @@ class ehbDriver(Driver, GenericDriver):
 
         '''
 
+        print ("we are in get 402")
+
         # record_id = kwargs.pop('record_id',None)
         records = kwargs.pop('records', [])
         rawResponse = kwargs.pop('rawResponse', False)
         _format = kwargs.pop('_format', self.FORMAT_JSON)
+
+        print ("thisi s records 412")
+        print (records)
+
         if record_id and record_id not in records:
             records.append(record_id)
         if len(records) == 1:
@@ -413,6 +430,7 @@ class ehbDriver(Driver, GenericDriver):
                     rawResponse=rawResponse,
                     **kwargs
                 )
+
                 if rv:
                     if (
                         not rawResponse and
@@ -433,6 +451,9 @@ class ehbDriver(Driver, GenericDriver):
                             self.path,
                             record_id)
                     else:
+                        # print ("this is rv string")
+                        # rv_string = rv.read().decode("utf-8")
+                        # print (rv_string)
                         return rv
                 else:
                     raise RecordDoesNotExist(self.url, self.path, record_id)
@@ -795,26 +816,16 @@ class ehbDriver(Driver, GenericDriver):
             rawResponse=True))
 
         print ("THIS IS META DATA WITHOUT FORMATTING")
-        # print (meta_data)
+        print (meta_data)
+
+        ################################################
+        ####  this is to add form field completion to meta
+        ################################################
 
         meta_data = json.dumps(meta_data)
         # meta_data = str(meta_data)
         print ("this is meta data as string")
-        # print (meta_data)
 
-        # meta_xml = self.meta(_format=self.FORMAT_XML, rawResponse=False)
-        # print ("THIS IS THE META XML")
-        #
-        # records = meta_data.getElementsByTagName('records')
-        #
-        # to_add = len(records)
-        #
-        # meta_data_field_to_add = "<item><field_name><![CDATA[" + form_name + "_completion]]></field_name><form_name><![CDATA[" + form_name + "]]></form_name><section_header></section_header><field_type><![CDATA[text]]></field_type><field_label><![CDATA[Study Subject ID]]></field_label><select_choices_or_calculations></select_choices_or_calculations><field_note></field_note><text_validation_type_or_show_slider_number></text_validation_type_or_show_slider_number><text_validation_min></text_validation_min><text_validation_max></text_validation_max><identifier></identifier><branching_logic></branching_logic><required_field><![CDATA[y]]></required_field><custom_alignment></custom_alignment><question_number></question_number><matrix_group_name></matrix_group_name><matrix_ranking></matrix_ranking><field_annotation></field_annotation></item>\n</records>\n'"
-        #
-        # meta_data_field_to_add_xml = xml.parseString(meta_data_field_to_add)
-        #
-        #
-        # records[to_add] = meta_data_field_to_add_xml
 
         meta_data = meta_data[:-1]
         print ("this is meta data concatenated3")
@@ -822,10 +833,7 @@ class ehbDriver(Driver, GenericDriver):
 
         meta_data_field_to_add = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
 
-        # meta_data_field_to_add = ", 'field_name': '" + form_name + "_completion', 'form_name': '" + form_name + "', 'section_header': '', 'field_type': 'radio', 'field_label': '', 'select_choices_or_calculations': '1, | 2, Incomplete | 3, Unverified | 4, Complete', 'field_note': '', 'text_validation_type_or_show_slider_number': '', 'text_validation_min': '', 'text_validation_max': '', 'identifier': '', 'branching_logic': '', 'required_field': '', 'custom_alignment': '', 'question_number': '', 'matrix_group_name': '', 'matrix_ranking': '', 'field_annotation': ''}]"
 
-        # meta_data_field_to_add = meta_data_field_to_add.decode('utf-8')
-        # meta_data_field_to_add = self.raw_to_json2 (meta_data_field_to_add)
         meta_data += meta_data_field_to_add
 
         print ("this is new meta data3")
@@ -833,17 +841,9 @@ class ehbDriver(Driver, GenericDriver):
 
         meta_data=json.loads(meta_data)
 
-
-
-        # meta_data = self.raw_to_json(meta_xml)
-        # meta_data = self.raw_to_json(meta_raw)
-
-        # meta_data_field_to_add = "{'field_name':'"+form_name+"_completion','form_name':'"+form_name+"','section_header':'','field_type':”radio','field_label':”Form Status','select_choices_or_calculations':''1,  | 2, Incomplete | 3, Unverified | 4, Complete','field_note':'','text_validation_type_or_show_slider_number':'','text_validation_min':'','text_validation_max':'','identifier':'','branching_logic':'','required_field':”n','custom_alignment':'','question_number':'','matrix_group_name':'','matrix_ranking':'','field_annotation':''}"
-        #
-        # meta_data += self.raw_to_json(meta_data_field_to_add)
-
-        # print ("THIS IS THE METADATA")
-        # print (meta_data)
+        ################################################
+        ####  resume normal code
+        ################################################
 
 
         session = kwargs.get('session', None)
@@ -869,6 +869,17 @@ class ehbDriver(Driver, GenericDriver):
                             records=[er.record_id])
             record_set = temp.read().strip()
             record_set = self.raw_to_json(record_set)
+
+            print ("this is record set 870")
+            # print (record_set.get(medical_history_complete))
+            for fn in self.form_data_ordered:
+                fn_complete = fn + '_complete'
+                print (fn_complete)
+                for r in record_set:
+                    print (r[fn_complete])
+            # print (record_set['study_id'])
+            # print (json.dumps(record_set))
+
             return form_builder.construct_form(meta_data,
                                                record_set,
                                                form_name,
