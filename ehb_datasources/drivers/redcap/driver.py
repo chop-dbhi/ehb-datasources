@@ -340,6 +340,7 @@ class GenericDriver(RequestHandler):
 
 class ehbDriver(Driver, GenericDriver):
 
+
     def __init__(self, url, password, username=None, secure=False):
         def getHost(url):
             return url.split('/')[2]
@@ -629,9 +630,17 @@ class ehbDriver(Driver, GenericDriver):
                 # longitudinal study
                 self.form_data_ordered = []
                 self.unique_event_names = json_config['unique_event_names']
+                for u in self.unique_event_names:
+                    print ("in configure, unique event names")
+                    print (u)
                 self.event_labels = json_config['event_labels']
+                for l in self.event_labels:
+                    print ("in configure, event labels")
+                    print (l)
                 self.form_data = {}
                 for k in list(json_config['form_data'].keys()):
+                    print ("this is key")
+                    print (k)
                     bools = []
                     values = json_config['form_data'][k]
                     for v in values:
@@ -641,13 +650,16 @@ class ehbDriver(Driver, GenericDriver):
                 temp = temp[0: temp.index('}')]
                 for item in re.findall(r'"[^"\r\n]*"', temp):
                     self.form_data_ordered.append(item[1: len(item) - 1])
+                for d in self.form_data:
+                    print ("in config, data")
+                    print (d)
         else:
             self.unique_event_names = kwargs.pop('unique_event_names', None)
             self.event_labels = kwargs.pop('event_labels', None)
             self.form_event_data = kwargs.pop('form_event_data', None)
             self.form_names = kwargs.pop('form_names', None)
 
-    def subRecordSelectionForm(self, form_url='', *args, **kwargs):
+    def subRecordSelectionForm(self, record_id, record, form_url='',  *args, **kwargs):
         '''
         Generates the REDCap data entry table.
 
@@ -659,6 +671,18 @@ class ehbDriver(Driver, GenericDriver):
         form_url = the prefix for the url for further form rendering
         '''
         # make sure the configure method has been called
+
+        # r_id = '{"record_id": "' + record_id + '"}';
+        # r_id = json.loads(r_id)
+        # print ("json rid")
+        # print (r_id["record_id"])
+        # r_id = {}
+        # r_id["record_id"] = record_id
+        r_id = record;
+
+        # r_id = "['" + record_id + "']"
+
+
         if not self.form_names and not (
             self.event_labels and
             self.unique_event_names and
@@ -666,6 +690,84 @@ class ehbDriver(Driver, GenericDriver):
             form_url
         ):
             return None
+
+        def find_completed_forms(self):
+            if self.form_names:
+                record_set = self.get(_format=self.FORMAT_JSON,
+                                      records=[r_id.record_id],
+                                      rawResponse=True).read().strip()
+                record_set = self.raw_to_json(record_set)
+            else:
+                temp = self.get(_format=self.FORMAT_JSON,
+                                rawResponse=True,
+                                records=[r_id.record_id])
+
+                record_set = temp.read().strip()
+                print ("this is record set 699")
+                print (record_set)
+                record_set = self.raw_to_json(record_set)
+
+            # form_counter=0
+            # event_num=2
+
+            print ("we're in 713")
+            for fn in self.form_data_ordered:
+                fn_complete = fn + '_complete'
+                form_number = self.form_data_ordered.index(fn)
+
+                # for e in self.unique_event_names
+                # to_append = str(form)number) + "_" + str(event_num)
+
+                incomplete_forms=[];
+                complete_forms=[];
+                not_started_forms=[];
+                unverified_forms=[];
+
+                print ("we're in 726")
+
+                for r in record_set:
+                    print ("this is r 726")
+                    print (r)
+
+                    if r[fn_complete] == 0:
+                        print ("in 733")
+                        incomplete_forms.append(to_append)
+                    elif r[fn_complete] == 1:
+                        unverified_forms.append(to_append)
+                    elif r[fn_complete] == 2:
+                        complete_forms.append(to_append)
+                    else:
+                        not_started_forms.append(to_append)
+
+            # incomplete_forms=[];
+            # complete_forms=[];
+            # not_started_forms=[];
+            # unverified_forms=[];
+            #
+            # for r in record_set:
+            #     if r[fn_complete] == 0:
+            #         incomplete_forms.append(to_append)
+            #     elif r[fn_complete] == 1:
+            #         unverified_forms.append(to_append)
+            #     elif r[fn_complete] == 2:
+            #         complete_forms.append(to_append)
+            #     else:
+            #         not_started_forms.append(to_append)
+
+            # for f in self.incomplete_forms:
+            #     print ("this is incomplete")
+            #     print (f)
+            # for f in self.unverified_forms:
+            #     print ("this is unverified")
+            #     print (f)
+            # for f in self.complete_forms:
+            #     print ("this is complete")
+            #     print (f)
+            # for f in self.not_started_forms:
+            #     print ("this is not started")
+            #     print (f)
+            return
+
 
         def counter(start):
             while True:
@@ -682,7 +784,7 @@ class ehbDriver(Driver, GenericDriver):
                 return row + ('<td><button data-toggle="modal"' +
                               ' data-backdrop="static" data-keyboard="false"' +
                               ' href="#pleaseWaitModal" class="btn btn-small' +
-                              ' btn-primary" onclick="location.href=\'' +
+                              ' btn-custom" onclick="location.href=\'' +
                               form_url + str(i) + '/\'">Edit</button></td>')
 
             form = ('<table class="table table-bordered table-striped ' +
@@ -705,11 +807,12 @@ class ehbDriver(Driver, GenericDriver):
                 '') + '</tr>'
 
             def make_td(i, j, l):
+
+                find_completed_forms(self)
                 if l:
                     return ('<td><button data-toggle="modal"' +
                             'data-backdrop="static" data-keyboard="false" ' +
-                            'href="#pleaseWaitModal" class="btn btn-small ' +
-                            'btn-primary" onclick="location.href=\'' +
+                            'href="#pleaseWaitModal"' + 'style="background-color:rgb(237,31,127),border:1px,border-radius:25px;"' +  'onclick="location.href=\'' +
                             form_url +
                             str(i) + '_' + str(j) + '/\'">Edit</button></td>')
                 else:
@@ -816,30 +919,30 @@ class ehbDriver(Driver, GenericDriver):
             rawResponse=True))
 
         print ("THIS IS META DATA WITHOUT FORMATTING")
-        print (meta_data)
+        # print (meta_data)
 
         ################################################
         ####  this is to add form field completion to meta
         ################################################
 
-        meta_data = json.dumps(meta_data)
-        # meta_data = str(meta_data)
-        print ("this is meta data as string")
-
-
-        meta_data = meta_data[:-1]
-        print ("this is meta data concatenated3")
-        # print (meta_data)
-
-        meta_data_field_to_add = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
-
-
-        meta_data += meta_data_field_to_add
-
-        print ("this is new meta data3")
-        # print (meta_data)
-
-        meta_data=json.loads(meta_data)
+        # meta_data = json.dumps(meta_data)
+        # # meta_data = str(meta_data)
+        # print ("this is meta data as string")
+        #
+        #
+        # meta_data = meta_data[:-1]
+        # print ("this is meta data concatenated3")
+        # # print (meta_data)
+        #
+        # meta_data_field_to_add = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
+        #
+        #
+        # meta_data += meta_data_field_to_add
+        #
+        # print ("this is new meta data3")
+        # # print (meta_data)
+        #
+        # meta_data=json.loads(meta_data)
 
         ################################################
         ####  resume normal code
@@ -858,37 +961,45 @@ class ehbDriver(Driver, GenericDriver):
                                                record_set,
                                                form_name,
                                                er.record_id,
+                                               self.form_data_ordered,
                                                None,
                                                None,
                                                None,
                                                session,
-                                               self.record_id_field_name)
+                                               self.record_id_field_name) #added form data ordered
         else:
             temp = self.get(_format=self.FORMAT_JSON,
                             rawResponse=True,
                             records=[er.record_id])
+            # print ("this is record_id 943-1")
+            # print (er.record_id)
+
+
             record_set = temp.read().strip()
             record_set = self.raw_to_json(record_set)
 
-            print ("this is record set 870")
-            # print (record_set.get(medical_history_complete))
-            for fn in self.form_data_ordered:
-                fn_complete = fn + '_complete'
-                print (fn_complete)
-                for r in record_set:
-                    print (r[fn_complete])
-            # print (record_set['study_id'])
-            # print (json.dumps(record_set))
+            # incomplete_forms=[];
+            # complete_forms=[];
+            # not_started_forms=[];
+            # unverified_forms=[];
+
+
+
+            print ("this is record_set, form name, record id, event num, unique event name, event label, record id field name")
+            print (form_name, er.record_id, event_num, self.unique_event_names, self.event_labels, self.record_id_field_name)
+
+
 
             return form_builder.construct_form(meta_data,
                                                record_set,
                                                form_name,
                                                er.record_id,
+                                               self.form_data_ordered,
                                                event_num,
                                                self.unique_event_names,
                                                self.event_labels,
                                                session,
-                                               self.record_id_field_name)
+                                               self.record_id_field_name) #added form data ordered
 
     def __getCDATA(self, item, tag_name, default=None):
             CDATA = item.getElementsByTagName(tag_name)
