@@ -20,7 +20,26 @@ class redcapTemplate(Template):
 
 class FormBuilderJson(object):
 
-    def construct_form(self, meta, record_set, form_name, record_id,
+    incomplete_forms=[];
+    complete_forms=[];
+    not_started_forms=[];
+    unverified_forms=[];
+
+    def is_form_complete(self, record_set, form_name, event_num, form_data_ordered):
+        fn_complete = form_name + '_complete'
+
+        for record in record_set:
+            if record[fn_complete] == 0:
+                self.incomplete_forms.append(event_num) #need to append the spec
+            elif record[fn_complete] == 1:
+                self.unverified_forms.append(event_num)
+            elif record[fn_complete] == 2:
+                self.complete_forms.append(event_num)
+            else:
+                self.not_started_forms.append(event_num)
+
+
+    def construct_form(self, meta, record_set, form_name, record_id, form_data_ordered,
                        event_num=None, unique_event_names=None,
                        event_labels=None, session=None, record_id_field=None):
         '''
@@ -64,14 +83,56 @@ class FormBuilderJson(object):
                 return '''
                     <div class="alert alert-danger"><center><span>There was an error retrieving this record from REDCap</span></center></div>
                 '''
+
+        ################################################
+        ####  this is to add form field completion to meta
+        ################################################
+
+        meta = json.dumps(meta)
+        # meta_data = str(meta_data)
+        # print ("this is meta data as string")
+
+
+        meta = meta[:-1]
+        print ("this is meta data concatenated3")
+        # print (meta_data)
+
+        meta_data_field_to_add = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
+
+
+        meta += meta_data_field_to_add
+
+        print ("this is new meta 5")
+        print (meta)
+
+        meta=json.loads(meta)
+
+        ################################################
+        ####  resume normal code
+        ################################################
+
         form_fields = [
             item for item in meta if item.get("form_name") == form_name
         ]
+
+
         self.form_fields = form_fields
-        # Remove identifiers from form
+
+        # Remove identifiers from form &
+
+
         for field in self.form_fields:
             if field['field_name'] == self.record_id_field:
                 self.form_fields.remove(field)
+
+
+
+
+
+
+
+
+
         master_dep_map, branch_logic_functions, apriori_branch_evals = self.build_branch_logic(
             meta, record_set, form_name, event_num, unique_event_names, event_labels)
         html = redcapTemplate("""

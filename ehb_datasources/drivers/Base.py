@@ -236,12 +236,19 @@ class RequestHandler(object):
                 (datetime.datetime.now() - ts).microseconds/1000)
         )
 
+        print ("what is record set")
+        print (path)
+        print (body)
+        print (headers)
+
         r = c.getresponse()
+
 
         return r
 
     def POST(self, path='', headers='', body=''):
         self.lastrequestbody = body
+
         return self.sendRequest('POST', path, headers, body)
 
     def GET(self, path='', headers='', body=''):
@@ -305,7 +312,8 @@ class RequestHandler(object):
             return matchobj.group(1)
 
         try:
-            # return json.loads(raw_string)
+            #return json.loads(raw_string)
+            print ("we are in base raw response 309")
             return json.loads(raw_string.decode('utf-8', 'backslashreplace'))
         except:
             raise
