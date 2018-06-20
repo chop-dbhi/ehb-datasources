@@ -9,6 +9,7 @@ from xml.parsers.expat import ExpatError
 from collections import OrderedDict
 from jinja2 import Template
 import http.client
+import time
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
     ImproperArguments, ServerError
@@ -206,14 +207,10 @@ class GenericDriver(RequestHandler):
 
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
 
-        print ("this is response, 208-2")
-        print (response)
-
         if rawResponse:
             return response
         else:
-            print (" we are in transform 215")
-            # print (response)
+
 
             return self.transformResponse(
                 _format,
@@ -417,6 +414,10 @@ class ehbDriver(Driver, GenericDriver):
         records = kwargs.pop('records', [])
         rawResponse = kwargs.pop('rawResponse', False)
         _format = kwargs.pop('_format', self.FORMAT_JSON)
+
+
+        print ("this is kwargs event 422")
+        print (kwargs.get('event'))
 
         print ("thisi s records 412")
         print (records)
@@ -646,6 +647,8 @@ class ehbDriver(Driver, GenericDriver):
                     for v in values:
                         bools.append(v == 1)
                     self.form_data[k] = bools
+                    print ("this is bool")
+                    print (self.form_data[k])
                 temp = config[config.index('form_data') + 12: len(config)]
                 temp = temp[0: temp.index('}')]
                 for item in re.findall(r'"[^"\r\n]*"', temp):
@@ -672,15 +675,13 @@ class ehbDriver(Driver, GenericDriver):
         '''
         # make sure the configure method has been called
 
-        # r_id = '{"record_id": "' + record_id + '"}';
-        # r_id = json.loads(r_id)
-        # print ("json rid")
-        # print (r_id["record_id"])
-        # r_id = {}
-        # r_id["record_id"] = record_id
         r_id = record;
+        form_completion = {}
 
-        # r_id = "['" + record_id + "']"
+        completed_forms = [];
+        incomplete_forms = [];
+        unverified_forms = [];
+        not_started_forms = [];
 
 
         if not self.form_names and not (
@@ -692,52 +693,138 @@ class ehbDriver(Driver, GenericDriver):
             return None
 
         def find_completed_forms(self):
-            if self.form_names:
-                record_set = self.get(_format=self.FORMAT_JSON,
-                                      records=[r_id.record_id],
-                                      rawResponse=True).read().strip()
-                record_set = self.raw_to_json(record_set)
-            else:
-                temp = self.get(_format=self.FORMAT_JSON,
-                                rawResponse=True,
-                                records=[r_id.record_id])
 
+            # going through the configure to find events and forms
+            # used in the table_rows
+
+            used_forms = []
+            counter =0
+
+            start = time.time()
+
+            field_names = []
+            events = []
+
+            for form in self.form_data.keys():
+                fn_complete = form + "_complete"
+                field_names.append(fn_complete)
+
+            for event in self.unique_event_names:
+                used_forms.clear()
+                events.clear()
+                events.append(event)
+                for form in self.form_data.keys():
+                    event_index = self.unique_event_names.index(event)
+                    if self.form_data[form][event_index] == True:
+                        used_forms.append(form)
+                temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
+                            records=[r_id.record_id], events=events, forms=used_forms)
                 record_set = temp.read().strip()
-                print ("this is record set 699")
-                print (record_set)
                 record_set = self.raw_to_json(record_set)
 
-            # form_counter=0
-            # event_num=2
+                for fc in field_names:
+                    for r in record_set:
+                        try:
+                            key = str(field_names.index(fc)) + "_" + str(self.unique_event_names.index(event))
+                            print ("we're in 729")
+                            print (r[fc])
+                            if (r[fc] == '0'):
+                                form_completion[key] = 0
+                            elif (r[fc] == '1'):
+                                form_completion[key] = 1
+                            elif (r[fc] == '2'):
+                                form_completion[key] = 2
+                            else:
+                                form_completion[key] = "null"
+                        except KeyError:
+                            pass
 
-            print ("we're in 713")
-            for fn in self.form_data_ordered:
-                fn_complete = fn + '_complete'
-                form_number = self.form_data_ordered.index(fn)
+            end = time.time()
+            print ("this is elapsed 2")
+            print (end-start)
 
-                # for e in self.unique_event_names
-                # to_append = str(form)number) + "_" + str(event_num)
+            for f in incomplete_forms:
+                print ("this is incomplete")
+                print (f)
+            for f in unverified_forms:
+                print ("this is unverified")
+                print (f)
+            for f in completed_forms:
+                print ("this is complete")
+                print (f)
+            for f in not_started_forms:
+                print ("this is not started")
+                print (f)
 
-                incomplete_forms=[];
-                complete_forms=[];
-                not_started_forms=[];
-                unverified_forms=[];
+            return
 
-                print ("we're in 726")
+                # temp = self.get(_format=self.FORMAT_JSON,
+                #                 rawResponse=True,
+                #                 records=[r_id.record_id], event=event, forms=used_forms)
 
-                for r in record_set:
-                    print ("this is r 726")
-                    print (r)
+                # record_set = temp.read().strip()
+                # print ("record set 725")
+                # print (record_set)
+                #
+                # record_set = self.raw_to_json(record_set)
 
-                    if r[fn_complete] == 0:
-                        print ("in 733")
-                        incomplete_forms.append(to_append)
-                    elif r[fn_complete] == 1:
-                        unverified_forms.append(to_append)
-                    elif r[fn_complete] == 2:
-                        complete_forms.append(to_append)
-                    else:
-                        not_started_forms.append(to_append)
+
+
+
+
+
+            # print ("in find 702, unique event names")
+            # print (u)
+
+
+            # if self.form_names:
+            #     record_set = self.get(_format=self.FORMAT_JSON,
+            #                           records=[r_id.record_id],
+            #                           rawResponse=True).read().strip()
+            #     record_set = self.raw_to_json(record_set)
+            # else:
+            #     temp = self.get(_format=self.FORMAT_JSON,
+            #                     rawResponse=True,
+            #                     records=[r_id.record_id])
+            #
+            #     record_set = temp.read().strip()
+            #     print ("this is record set 699")
+            #     print (record_set)
+            #     record_set = self.raw_to_json(record_set)
+            #
+            # # form_counter=0
+            # # event_num=2
+            #
+            # print ("we're in 713")
+            # for fn in self.form_data_ordered:
+            #     fn_complete = fn + '_complete'
+            #     form_number = self.form_data_ordered.index(fn)
+            #
+            #     # for e in self.unique_event_names
+            #     # to_append = str(form)number) + "_" + str(event_num)
+            #
+            #     incomplete_forms=[];
+            #     complete_forms=[];
+            #     not_started_forms=[];
+            #     unverified_forms=[];
+            #     to_append ="hi"
+            #
+            #     print ("we're in 726")
+            #
+            #     for r in record_set:
+            #         print ("this is r 726")
+            #         print (r)
+            #
+            #         if r[fn_complete] == 0:
+            #             print ("in 733")
+            #             incomplete_forms.append(to_append)
+            #         elif r[fn_complete] == 1:
+            #             unverified_forms.append(to_append)
+            #         elif r[fn_complete] == 2:
+            #             complete_forms.append(to_append)
+            #         else:
+            #             print ("in 741")
+            #             not_started_forms.append(to_append)
 
             # incomplete_forms=[];
             # complete_forms=[];
@@ -766,7 +853,7 @@ class ehbDriver(Driver, GenericDriver):
             # for f in self.not_started_forms:
             #     print ("this is not started")
             #     print (f)
-            return
+
 
 
         def counter(start):
@@ -806,15 +893,56 @@ class ehbDriver(Driver, GenericDriver):
                 self.event_labels,
                 '') + '</tr>'
 
-            def make_td(i, j, l):
+            find_completed_forms(self)
 
-                find_completed_forms(self)
+
+
+            def make_td(i, j, l):
                 if l:
-                    return ('<td><button data-toggle="modal"' +
-                            'data-backdrop="static" data-keyboard="false" ' +
-                            'href="#pleaseWaitModal"' + 'style="background-color:rgb(237,31,127),border:1px,border-radius:25px;"' +  'onclick="location.href=\'' +
-                            form_url +
-                            str(i) + '_' + str(j) + '/\'">Edit</button></td>')
+                    key = str(i) + "_" + str(j)
+                    if form_completion[key] == 0:
+                        return ('<td><button data-toggle="modal"' +
+                                'data-backdrop="static" data-keyboard="false" ' +
+                                'href="#pleaseWaitModal"' + 'style="background-color:red"' +  'onclick="location.href=\'' +
+                                form_url +
+                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
+
+
+
+
+                        print ("here")
+                    elif form_completion[key] == 1:
+                        return ('<td><button data-toggle="modal"' +
+                                'data-backdrop="static" data-keyboard="false" ' +
+                                'href="#pleaseWaitModal"' + 'style="background-color:yellow"' +  'onclick="location.href=\'' +
+                                form_url +
+                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
+
+
+
+                        print ("yellow")
+
+                    elif form_completion[key] ==2:
+                        return ('<td><button data-toggle="modal"' +
+                                'data-backdrop="static" data-keyboard="false" ' +
+                                'href="#pleaseWaitModal"' + 'style="background-color:green"' +  'onclick="location.href=\'' +
+                                form_url +
+                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
+
+                        print ("green")
+
+                    elif form_completion[key] == "null":
+                        return ('<td><button data-toggle="modal"' +
+                                'data-backdrop="static" data-keyboard="false" ' +
+                                'href="#pleaseWaitModal"'  +  'onclick="location.href=\'' +
+                                form_url +
+                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
+                        print ("null")
+                    # return ('<td><button data-toggle="modal"' +
+                    #         'data-backdrop="static" data-keyboard="false" ' +
+                    #         'href="#pleaseWaitModal"' + 'style="background-color:red"' +  'onclick="location.href=\'' +
+                    #         form_url +
+                    #         str(i) + '_' + str(j) + '/\'">Edit</button></td>')
                 else:
                     return '<td></td>'
 
@@ -838,6 +966,8 @@ class ehbDriver(Driver, GenericDriver):
                         y: x + make_td(i, next(count), y),
                         self.form_data[l[0]],
                         '')
+
+
 
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
@@ -911,6 +1041,9 @@ class ehbDriver(Driver, GenericDriver):
         form_name = self.form_data_ordered[form_num]
         # need to get the meta data from REDCAp to construct the form and the
         # record to populate previously entered values
+
+        print ("in 917, this is form_name")
+        print ([form_name])
         form_builder = FormBuilderJson()
 
 
