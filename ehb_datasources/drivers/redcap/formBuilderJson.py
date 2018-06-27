@@ -88,23 +88,15 @@ class FormBuilderJson(object):
         ####  this is to add form field completion to meta
         ################################################
 
+        # meta to string
         meta = json.dumps(meta)
-        # meta_data = str(meta_data)
-        # print ("this is meta data as string")
-
-
+        # take out the ']'
         meta = meta[:-1]
-        print ("this is meta data concatenated3")
-        # print (meta_data)
+        completion_field_meta = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
+        # add the field to the existing meta
+        meta += completion_field_meta
 
-        meta_data_field_to_add = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
-
-
-        meta += meta_data_field_to_add
-
-        print ("this is new meta 5")
-        print (meta)
-
+        # reload meta
         meta=json.loads(meta)
 
         ################################################
@@ -124,14 +116,6 @@ class FormBuilderJson(object):
         for field in self.form_fields:
             if field['field_name'] == self.record_id_field:
                 self.form_fields.remove(field)
-
-
-
-
-
-
-
-
 
         master_dep_map, branch_logic_functions, apriori_branch_evals = self.build_branch_logic(
             meta, record_set, form_name, event_num, unique_event_names, event_labels)

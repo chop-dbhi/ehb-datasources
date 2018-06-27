@@ -123,6 +123,7 @@ class GenericDriver(RequestHandler):
             'overwriteBehavior': overwrite,
             'data': req_data
         }
+
         params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
         if response.status == 201 or response.status == 200:
@@ -147,6 +148,7 @@ class GenericDriver(RequestHandler):
         else:
             # Don't know what happened, let processResponse raise appropriate
             # exception
+            print ("we fail here, 150")
             return self.processResponse(response, self.path)
 
     def read_records(self, _format=FORMAT_JSON, _type=TYPE_FLAT,
@@ -275,10 +277,6 @@ class GenericDriver(RequestHandler):
             print ("we are in print raw reponse")
             return response
         else:
-            print ("we are calling transform response")
-            print ("result of transform")
-            result_of_transform = self.transformResponse(_format, response)
-            print (result_of_transform)
             return self.transformResponse(_format, response)
 
     # overriding method from Base.py in order to
@@ -416,8 +414,6 @@ class ehbDriver(Driver, GenericDriver):
         _format = kwargs.pop('_format', self.FORMAT_JSON)
 
 
-        print ("this is kwargs event 422")
-        print (kwargs.get('event'))
 
         print ("thisi s records 412")
         print (records)
@@ -494,8 +490,6 @@ class ehbDriver(Driver, GenericDriver):
 
         '''
 
-        print ("we are in create, line 469")
-
         def validate_id(pid):
             try:
                 x = None
@@ -521,7 +515,12 @@ class ehbDriver(Driver, GenericDriver):
         overwrite = kwargs.pop('overwrite', self.OVERWRITE_NORMAL)
         record_values = kwargs.pop('record_values', None)
 
+        print ("we are in 520")
+        print (self.form_names)
+
         if not study_id and not (event or self.form_names):
+            print ("we are in 521, no form names?")
+            print (self.form_names)
             raise ImproperArguments(
                 'redcap.ehbDriver.create',
                 ['study_id', 'redcap_event_name', 'form_names']
@@ -555,11 +554,16 @@ class ehbDriver(Driver, GenericDriver):
             record = '<records><item><' + id_label + '><![CDATA[' + study_id +\
                 ']]></' + id_label + '>'
 
+            print ("we're in line 553")
+            print (record)
+
         if record_values:
             for k, v in record_values:
                 record += '<' + k + '><![CDATA[' + v + ']]></' + k + '>'
 
         record += '</item></records>'
+        print ("568568568")
+        print (record)
 
 
         if 1 != self.write_records(
@@ -631,31 +635,25 @@ class ehbDriver(Driver, GenericDriver):
                 # longitudinal study
                 self.form_data_ordered = []
                 self.unique_event_names = json_config['unique_event_names']
-                for u in self.unique_event_names:
-                    print ("in configure, unique event names")
-                    print (u)
+
                 self.event_labels = json_config['event_labels']
-                for l in self.event_labels:
-                    print ("in configure, event labels")
-                    print (l)
+
                 self.form_data = {}
                 for k in list(json_config['form_data'].keys()):
-                    print ("this is key")
-                    print (k)
                     bools = []
                     values = json_config['form_data'][k]
                     for v in values:
                         bools.append(v == 1)
                     self.form_data[k] = bools
-                    print ("this is bool")
-                    print (self.form_data[k])
+
                 temp = config[config.index('form_data') + 12: len(config)]
                 temp = temp[0: temp.index('}')]
+
                 for item in re.findall(r'"[^"\r\n]*"', temp):
                     self.form_data_ordered.append(item[1: len(item) - 1])
-                for d in self.form_data:
-                    print ("in config, data")
-                    print (d)
+
+
+
         else:
             self.unique_event_names = kwargs.pop('unique_event_names', None)
             self.event_labels = kwargs.pop('event_labels', None)
@@ -675,14 +673,7 @@ class ehbDriver(Driver, GenericDriver):
         '''
         # make sure the configure method has been called
 
-        r_id = record;
-        form_completion = {}
-
-        completed_forms = [];
-        incomplete_forms = [];
-        unverified_forms = [];
-        not_started_forms = [];
-
+        print ("6776777677777767777")
 
         if not self.form_names and not (
             self.event_labels and
@@ -692,167 +683,101 @@ class ehbDriver(Driver, GenericDriver):
         ):
             return None
 
-        def find_completed_forms(self):
+        r_id = record           # r_id is the subject record ID
 
-            # going through the configure to find events and forms
-            # used in the table_rows
+        all_form_status = {}    # dictionary to hold all forms, and their corresponding status
+                                # Key: Str(Form_spec), Value: Int(Completion_status)
 
+        # new function to find and display form status
+        # to users through coded colors.
+        # Incomplete (0) displays red
+        # Unverified (1) displays yellow
+        # Complete (2) displays green
+
+        def find_completed_forms_nonlongitudinal(self):
+
+            for fn in self.form_names:
+                record_set = self.get(_format=self.FORMAT_JSON,
+                                      records=[r_id.record_id],
+                                      rawResponse=True,
+                                      forms=self.form_names).read().strip()
+                record_set = self.raw_to_json(record_set)
+
+                fn_complete = fn + "_complete"
+                print ("this is fn complete")
+                print (fn_complete)
+
+                key = str(self.form_names.index(fn))
+                print (key)
+
+                # iterate through the record set to find the completion field
+                for r in record_set:
+                    # form is incomplete
+                    if (r[fn_complete] == '0'):
+                        # append the form and value to all_form_status
+                        all_form_status[key] = 0
+
+                    # form is unverified
+                    elif (r[fn_complete] == '1'):
+                        all_form_status[key] = 1
+
+                    # form is complete
+                    elif (r[fn_complete] == '2'):
+                        all_form_status[key] = 2
+            return
+
+        def find_completed_forms_longitudinal(self):
+
+            # going through variables in configure to find events and forms
+            # used in the table rows for longitudinal studies
             used_forms = []
-            counter =0
-
-            start = time.time()
-
-            field_names = []
             events = []
 
-            for form in self.form_data.keys():
-                fn_complete = form + "_complete"
-                field_names.append(fn_complete)
-
+            # iterate through all the events in the study
             for event in self.unique_event_names:
                 used_forms.clear()
                 events.clear()
                 events.append(event)
+
+                # iterate through all the forms in the study to...
                 for form in self.form_data.keys():
                     event_index = self.unique_event_names.index(event)
+
+                    # determine if the form is on this event
                     if self.form_data[form][event_index] == True:
                         used_forms.append(form)
+
+                # returns the record set for specific forms for a specific event
                 temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
                             records=[r_id.record_id], events=events, forms=used_forms)
                 record_set = temp.read().strip()
                 record_set = self.raw_to_json(record_set)
 
-                for fc in field_names:
+                for f in used_forms:
+                    # creating the field name
+                    fn_complete = f + "_complete"
+
+                    # recreating the form_spec
+                    key = str(list(self.form_data.keys()).index(f)) + "_" + str(event_index)
+
+                    # iterate through the record set to find the completion field
                     for r in record_set:
-                        try:
-                            key = str(field_names.index(fc)) + "_" + str(self.unique_event_names.index(event))
-                            print ("we're in 729")
-                            print (r[fc])
-                            if (r[fc] == '0'):
-                                form_completion[key] = 0
-                            elif (r[fc] == '1'):
-                                form_completion[key] = 1
-                            elif (r[fc] == '2'):
-                                form_completion[key] = 2
-                            else:
-                                form_completion[key] = "null"
-                        except KeyError:
-                            pass
-
-            end = time.time()
-            print ("this is elapsed 2")
-            print (end-start)
-
-            for f in incomplete_forms:
-                print ("this is incomplete")
-                print (f)
-            for f in unverified_forms:
-                print ("this is unverified")
-                print (f)
-            for f in completed_forms:
-                print ("this is complete")
-                print (f)
-            for f in not_started_forms:
-                print ("this is not started")
-                print (f)
+                        # form is incomplete
+                        if (r[fn_complete] == '0'):
+                            # append the form and value to all_form_status
+                            all_form_status[key] = 0
+                        # form is unverified
+                        elif (r[fn_complete] == '1'):
+                            all_form_status[key] = 1
+                        # form is complete
+                        elif (r[fn_complete] == '2'):
+                            all_form_status[key] = 2
+                        # form complete returned an uncoded-for value
+                        else:
+                            all_form_status[key] = 3
 
             return
 
-                # temp = self.get(_format=self.FORMAT_JSON,
-                #                 rawResponse=True,
-                #                 records=[r_id.record_id], event=event, forms=used_forms)
-
-                # record_set = temp.read().strip()
-                # print ("record set 725")
-                # print (record_set)
-                #
-                # record_set = self.raw_to_json(record_set)
-
-
-
-
-
-
-            # print ("in find 702, unique event names")
-            # print (u)
-
-
-            # if self.form_names:
-            #     record_set = self.get(_format=self.FORMAT_JSON,
-            #                           records=[r_id.record_id],
-            #                           rawResponse=True).read().strip()
-            #     record_set = self.raw_to_json(record_set)
-            # else:
-            #     temp = self.get(_format=self.FORMAT_JSON,
-            #                     rawResponse=True,
-            #                     records=[r_id.record_id])
-            #
-            #     record_set = temp.read().strip()
-            #     print ("this is record set 699")
-            #     print (record_set)
-            #     record_set = self.raw_to_json(record_set)
-            #
-            # # form_counter=0
-            # # event_num=2
-            #
-            # print ("we're in 713")
-            # for fn in self.form_data_ordered:
-            #     fn_complete = fn + '_complete'
-            #     form_number = self.form_data_ordered.index(fn)
-            #
-            #     # for e in self.unique_event_names
-            #     # to_append = str(form)number) + "_" + str(event_num)
-            #
-            #     incomplete_forms=[];
-            #     complete_forms=[];
-            #     not_started_forms=[];
-            #     unverified_forms=[];
-            #     to_append ="hi"
-            #
-            #     print ("we're in 726")
-            #
-            #     for r in record_set:
-            #         print ("this is r 726")
-            #         print (r)
-            #
-            #         if r[fn_complete] == 0:
-            #             print ("in 733")
-            #             incomplete_forms.append(to_append)
-            #         elif r[fn_complete] == 1:
-            #             unverified_forms.append(to_append)
-            #         elif r[fn_complete] == 2:
-            #             complete_forms.append(to_append)
-            #         else:
-            #             print ("in 741")
-            #             not_started_forms.append(to_append)
-
-            # incomplete_forms=[];
-            # complete_forms=[];
-            # not_started_forms=[];
-            # unverified_forms=[];
-            #
-            # for r in record_set:
-            #     if r[fn_complete] == 0:
-            #         incomplete_forms.append(to_append)
-            #     elif r[fn_complete] == 1:
-            #         unverified_forms.append(to_append)
-            #     elif r[fn_complete] == 2:
-            #         complete_forms.append(to_append)
-            #     else:
-            #         not_started_forms.append(to_append)
-
-            # for f in self.incomplete_forms:
-            #     print ("this is incomplete")
-            #     print (f)
-            # for f in self.unverified_forms:
-            #     print ("this is unverified")
-            #     print (f)
-            # for f in self.complete_forms:
-            #     print ("this is complete")
-            #     print (f)
-            # for f in self.not_started_forms:
-            #     print ("this is not started")
-            #     print (f)
 
 
 
@@ -863,16 +788,37 @@ class ehbDriver(Driver, GenericDriver):
 
         if self.form_names:
             # The project is not longitudinal
+            find_completed_forms_nonlongitudinal(self)
             def makeRow(fn, i):
+                key = str(i)
                 row = '<tr><td>' + reduce(
                     lambda x,
                     y: x + ' ' + y.capitalize(),
                     fn.split('_'), '') + '</td>'
-                return row + ('<td><button data-toggle="modal"' +
+
+                # return row + ('<td><button data-toggle="modal"' +
+                #               ' data-backdrop="static" data-keyboard="false"' +
+                #               ' href="#pleaseWaitModal" class="btn btn-small' +
+                #               ' btn-primary" onclick="location.href=\'' +
+                #               form_url + str(i) + '/\'">Edit</button></td>')
+                first_string = ('<td><button data-toggle="modal"' +
                               ' data-backdrop="static" data-keyboard="false"' +
-                              ' href="#pleaseWaitModal" class="btn btn-small' +
-                              ' btn-custom" onclick="location.href=\'' +
-                              form_url + str(i) + '/\'">Edit</button></td>')
+                              ' href="#pleaseWaitModal"' )
+                second_string = (' onclick="location.href=\'' +
+                                form_url + str(i) + '/\'">Edit</button></td>')
+
+                # return (row + (first_string + 'class="btn btnsmall btn-primary"' + second_string))
+
+                # incomplete forms display blue button
+                if all_form_status[key] == 0:
+                    return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+                # unverified forms display yellow button
+                elif all_form_status[key] == 1:
+                    return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
+                # complete forms display green button
+                elif all_form_status[key] ==2:
+                    return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
+
 
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
@@ -893,56 +839,24 @@ class ehbDriver(Driver, GenericDriver):
                 self.event_labels,
                 '') + '</tr>'
 
-            find_completed_forms(self)
-
-
+            find_completed_forms_longitudinal(self)
 
             def make_td(i, j, l):
+                first_string = '<td><button data-toggle="modal"' + 'data-backdrop="static" data-keyboard="false" ' + 'href="#pleaseWaitModal"'
+
+                second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
+                key = str(i) + "_" + str(j)
+
                 if l:
-                    key = str(i) + "_" + str(j)
-                    if form_completion[key] == 0:
-                        return ('<td><button data-toggle="modal"' +
-                                'data-backdrop="static" data-keyboard="false" ' +
-                                'href="#pleaseWaitModal"' + 'style="background-color:red"' +  'onclick="location.href=\'' +
-                                form_url +
-                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
-
-
-
-
-                        print ("here")
-                    elif form_completion[key] == 1:
-                        return ('<td><button data-toggle="modal"' +
-                                'data-backdrop="static" data-keyboard="false" ' +
-                                'href="#pleaseWaitModal"' + 'style="background-color:yellow"' +  'onclick="location.href=\'' +
-                                form_url +
-                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
-
-
-
-                        print ("yellow")
-
-                    elif form_completion[key] ==2:
-                        return ('<td><button data-toggle="modal"' +
-                                'data-backdrop="static" data-keyboard="false" ' +
-                                'href="#pleaseWaitModal"' + 'style="background-color:green"' +  'onclick="location.href=\'' +
-                                form_url +
-                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
-
-                        print ("green")
-
-                    elif form_completion[key] == "null":
-                        return ('<td><button data-toggle="modal"' +
-                                'data-backdrop="static" data-keyboard="false" ' +
-                                'href="#pleaseWaitModal"'  +  'onclick="location.href=\'' +
-                                form_url +
-                                str(i) + '_' + str(j) + '/\'">Edit</button></td>')
-                        print ("null")
-                    # return ('<td><button data-toggle="modal"' +
-                    #         'data-backdrop="static" data-keyboard="false" ' +
-                    #         'href="#pleaseWaitModal"' + 'style="background-color:red"' +  'onclick="location.href=\'' +
-                    #         form_url +
-                    #         str(i) + '_' + str(j) + '/\'">Edit</button></td>')
+                    # incomplete forms display blue button
+                    if all_form_status[key] == 0:
+                        return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+                    # unverified forms display yellow button
+                    elif all_form_status[key] == 1:
+                        return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
+                    # complete forms display green button
+                    elif all_form_status[key] ==2:
+                        return (first_string + 'class="btn btnsmall btn-success"' + second_string)
                 else:
                     return '<td></td>'
 
@@ -966,8 +880,6 @@ class ehbDriver(Driver, GenericDriver):
                         y: x + make_td(i, next(count), y),
                         self.form_data[l[0]],
                         '')
-
-
 
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
@@ -1042,45 +954,13 @@ class ehbDriver(Driver, GenericDriver):
         # need to get the meta data from REDCAp to construct the form and the
         # record to populate previously entered values
 
-        print ("in 917, this is form_name")
-        print ([form_name])
+
         form_builder = FormBuilderJson()
 
 
         meta_data = self.raw_to_json(self.meta(
             _format=self.FORMAT_JSON,
             rawResponse=True))
-
-        print ("THIS IS META DATA WITHOUT FORMATTING")
-        # print (meta_data)
-
-        ################################################
-        ####  this is to add form field completion to meta
-        ################################################
-
-        # meta_data = json.dumps(meta_data)
-        # # meta_data = str(meta_data)
-        # print ("this is meta data as string")
-        #
-        #
-        # meta_data = meta_data[:-1]
-        # print ("this is meta data concatenated3")
-        # # print (meta_data)
-        #
-        # meta_data_field_to_add = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
-        #
-        #
-        # meta_data += meta_data_field_to_add
-        #
-        # print ("this is new meta data3")
-        # # print (meta_data)
-        #
-        # meta_data=json.loads(meta_data)
-
-        ################################################
-        ####  resume normal code
-        ################################################
-
 
         session = kwargs.get('session', None)
 
@@ -1090,6 +970,9 @@ class ehbDriver(Driver, GenericDriver):
                                   rawResponse=True,
                                   forms=[form_name]).read().strip()
             record_set = self.raw_to_json(record_set)
+            print ("this is form name while w.o [] and with")
+            print (form_name)
+            print ([form_name])
             return form_builder.construct_form(meta_data,
                                                record_set,
                                                form_name,
@@ -1104,24 +987,9 @@ class ehbDriver(Driver, GenericDriver):
             temp = self.get(_format=self.FORMAT_JSON,
                             rawResponse=True,
                             records=[er.record_id])
-            # print ("this is record_id 943-1")
-            # print (er.record_id)
-
 
             record_set = temp.read().strip()
             record_set = self.raw_to_json(record_set)
-
-            # incomplete_forms=[];
-            # complete_forms=[];
-            # not_started_forms=[];
-            # unverified_forms=[];
-
-
-
-            print ("this is record_set, form name, record id, event num, unique event name, event label, record id field name")
-            print (form_name, er.record_id, event_num, self.unique_event_names, self.event_labels, self.record_id_field_name)
-
-
 
             return form_builder.construct_form(meta_data,
                                                record_set,
@@ -1226,6 +1094,8 @@ class ehbDriver(Driver, GenericDriver):
         data = {}
 
         post_data = request.POST
+        print ("line 1113, reqest post")
+        print (post_data)
         if post_data:
             for k, v in list(post_data.items()):
                 data[k] = v
@@ -1300,6 +1170,8 @@ class ehbDriver(Driver, GenericDriver):
                     'field_name')[0].firstChild
                 if first_item:
                     id_label = first_item.wholeText
+                    print ("we're in 1174")
+                    print (id_label)
                 else:
                     return ['REDCap Driver could not obtain the REDCap record id field from the metadata']  # noqa
             else:
@@ -1307,6 +1179,8 @@ class ehbDriver(Driver, GenericDriver):
             # loop over items in meta_data to construct data entries from data
             data_entries = ''.join([make_data_entry_for(item) for item in items[1: len(items)] if self.__getCDATA(item, 'form_name') == form_name])  # noqa
 
+            print ("we're in 1183")
+            print (data_entries)
         if id_label in list(data.keys()):
             record = '<records><item>'
         else:
@@ -1315,12 +1189,16 @@ class ehbDriver(Driver, GenericDriver):
         if self.form_names:
             # This is not a longitudinal study
             record += data_entries + '</item></records>'
+            print ("this is line 1180")
+            print (record)
         else:
             # This is a longitudinal study
             unique_event_label = self.unique_event_names[event_num]
             record += '<redcap_event_name><![CDATA[' + \
                 unique_event_label + ']]></redcap_event_name>' + \
                 data_entries + '</item></records>'
+            print ("this is line 1188")
+            print (record)
 
         # Now write the record to REDCap, if successful don't return anything
         try:

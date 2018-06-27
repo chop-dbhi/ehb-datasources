@@ -236,10 +236,7 @@ class RequestHandler(object):
                 (datetime.datetime.now() - ts).microseconds/1000)
         )
 
-        print ("what is record set 239-2")
-        print (path)
-        print (body)
-        print (headers)
+
 
         r = c.getresponse()
 
@@ -248,6 +245,10 @@ class RequestHandler(object):
 
     def POST(self, path='', headers='', body=''):
         self.lastrequestbody = body
+        print ("in post 248")
+        print (body)
+        print (headers)
+        print (path)
 
         return self.sendRequest('POST', path, headers, body)
 
