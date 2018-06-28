@@ -655,100 +655,6 @@ class ehbDriver(Driver, GenericDriver):
                 yield start
                 start += 1
 
-        if self.form_names:
-            # The project is not longitudinal
-            find_completed_forms_nonlongitudinal(self)
-            def makeRow(fn, i):
-                key = str(i)
-                row = '<tr><td>' + reduce(
-                    lambda x,
-                    y: x + ' ' + y.capitalize(),
-                    fn.split('_'), '') + '</td>'
-
-                # return row + ('<td><button data-toggle="modal"' +
-                #               ' data-backdrop="static" data-keyboard="false"' +
-                #               ' href="#pleaseWaitModal" class="btn btn-small' +
-                #               ' btn-primary" onclick="location.href=\'' +
-                #               form_url + str(i) + '/\'">Edit</button></td>')
-                first_string = ('<td><button data-toggle="modal"' +
-                              ' data-backdrop="static" data-keyboard="false"' +
-                              ' href="#pleaseWaitModal"' )
-                second_string = (' onclick="location.href=\'' +
-                                form_url + str(i) + '/\'">Edit</button></td>')
-
-                # incomplete forms display blue button
-                if all_form_status[key] == 0:
-                    return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
-                # unverified forms display yellow button
-                elif all_form_status[key] == 1:
-                    return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                # complete forms display green button
-                elif all_form_status[key] ==2:
-                    return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
-
-            form = ('<table class="table table-bordered table-striped ' +
-                    'table-condensed"><tr><th>Data Form</th><th></th></tr>')
-            count = counter(0)
-            rows = [makeRow(fn, next(count)) for fn in self.form_names]
-            form += ''.join(rows) + '</table>'
-            return form
-        else:
-            # The project is longitudinal
-            number_of_events = str(len(self.event_labels))
-            form = ('<table class="table table-bordered table-striped' +
-                    'table-condensed"><tr><th rowspan="2">' +
-                    'Data Collection Instrument</th><th colspan="' +
-                    number_of_events + '">Events</th></tr>')
-            form += '<tr>' + reduce(
-                lambda x,
-                y: x + '<td>' + y + '</td>',
-                self.event_labels,
-                '') + '</tr>'
-
-            find_completed_forms_longitudinal(self)
-            
-            def make_td(i, j, l):
-                first_string = '<td><button data-toggle="modal"' + 'data-backdrop="static" data-keyboard="false" ' + 'href="#pleaseWaitModal"'
-
-                second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
-                key = str(i) + "_" + str(j)
-
-                if l:
-                    # incomplete forms display blue button
-                    if all_form_status[key] == 0:
-                        return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
-                    # unverified forms display yellow button
-                    elif all_form_status[key] == 1:
-                        return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                    # complete forms display green button
-                    elif all_form_status[key] ==2:
-                        return (first_string + 'class="btn btnsmall btn-success"' + second_string)
-                else:
-                    return '<td></td>'
-
-            def make_trs(i, l):
-                count = counter(0)
-                if len(l) > 1:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
-                        '') + '</tr>' + make_trs(i + 1, l[1: len(l)])
-                else:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
-                        '')
-
-            form += make_trs(0, self.form_data_ordered) + '</table>'
-            return form
 
         r_id = record           # r_id is the subject record ID
 
@@ -827,6 +733,103 @@ class ehbDriver(Driver, GenericDriver):
                         elif (r[fn_complete] == '2'):
                             all_form_status[key] = 2
             return
+
+
+        if self.form_names:
+            # The project is not longitudinal
+            find_completed_forms_nonlongitudinal(self)
+            def makeRow(fn, i):
+                key = str(i)
+                row = '<tr><td>' + reduce(
+                    lambda x,
+                    y: x + ' ' + y.capitalize(),
+                    fn.split('_'), '') + '</td>'
+
+                # return row + ('<td><button data-toggle="modal"' +
+                #               ' data-backdrop="static" data-keyboard="false"' +
+                #               ' href="#pleaseWaitModal" class="btn btn-small' +
+                #               ' btn-primary" onclick="location.href=\'' +
+                #               form_url + str(i) + '/\'">Edit</button></td>')
+                first_string = ('<td><button data-toggle="modal"' +
+                              ' data-backdrop="static" data-keyboard="false"' +
+                              ' href="#pleaseWaitModal"' )
+                second_string = (' onclick="location.href=\'' +
+                                form_url + str(i) + '/\'">Edit</button></td>')
+
+                # incomplete forms display blue button
+                if all_form_status[key] == 0:
+                    return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+                # unverified forms display yellow button
+                elif all_form_status[key] == 1:
+                    return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
+                # complete forms display green button
+                elif all_form_status[key] ==2:
+                    return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
+
+            form = ('<table class="table table-bordered table-striped ' +
+                    'table-condensed"><tr><th>Data Form</th><th></th></tr>')
+            count = counter(0)
+            rows = [makeRow(fn, next(count)) for fn in self.form_names]
+            form += ''.join(rows) + '</table>'
+            return form
+        else:
+            # The project is longitudinal
+            number_of_events = str(len(self.event_labels))
+            form = ('<table class="table table-bordered table-striped' +
+                    'table-condensed"><tr><th rowspan="2">' +
+                    'Data Collection Instrument</th><th colspan="' +
+                    number_of_events + '">Events</th></tr>')
+            form += '<tr>' + reduce(
+                lambda x,
+                y: x + '<td>' + y + '</td>',
+                self.event_labels,
+                '') + '</tr>'
+
+            find_completed_forms_longitudinal(self)
+
+            def make_td(i, j, l):
+                first_string = '<td><button data-toggle="modal"' + 'data-backdrop="static" data-keyboard="false" ' + 'href="#pleaseWaitModal"'
+
+                second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
+                key = str(i) + "_" + str(j)
+
+                if l:
+                    # incomplete forms display blue button
+                    if all_form_status[key] == 0:
+                        return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+                    # unverified forms display yellow button
+                    elif all_form_status[key] == 1:
+                        return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
+                    # complete forms display green button
+                    elif all_form_status[key] ==2:
+                        return (first_string + 'class="btn btnsmall btn-success"' + second_string)
+                else:
+                    return '<td></td>'
+
+            def make_trs(i, l):
+                count = counter(0)
+                if len(l) > 1:
+                    return '<tr><td>' + reduce(
+                        lambda x,
+                        y: x + ' ' + y.capitalize(),
+                        l[0].split('_'), '') + '</td>' + reduce(
+                        lambda x,
+                        y: x + make_td(i, next(count), y),
+                        self.form_data[l[0]],
+                        '') + '</tr>' + make_trs(i + 1, l[1: len(l)])
+                else:
+                    return '<tr><td>' + reduce(
+                        lambda x,
+                        y: x + ' ' + y.capitalize(),
+                        l[0].split('_'), '') + '</td>' + reduce(
+                        lambda x,
+                        y: x + make_td(i, next(count), y),
+                        self.form_data[l[0]],
+                        '')
+
+            form += make_trs(0, self.form_data_ordered) + '</table>'
+            return form
+
 
 
     def subRecordForm(self, external_record, form_spec='', *args, **kwargs):
