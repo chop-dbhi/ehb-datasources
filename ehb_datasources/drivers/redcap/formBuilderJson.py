@@ -20,25 +20,6 @@ class redcapTemplate(Template):
 
 class FormBuilderJson(object):
 
-    incomplete_forms=[];
-    complete_forms=[];
-    not_started_forms=[];
-    unverified_forms=[];
-
-    def is_form_complete(self, record_set, form_name, event_num, form_data_ordered):
-        fn_complete = form_name + '_complete'
-
-        for record in record_set:
-            if record[fn_complete] == 0:
-                self.incomplete_forms.append(event_num) #need to append the spec
-            elif record[fn_complete] == 1:
-                self.unverified_forms.append(event_num)
-            elif record[fn_complete] == 2:
-                self.complete_forms.append(event_num)
-            else:
-                self.not_started_forms.append(event_num)
-
-
     def construct_form(self, meta, record_set, form_name, record_id, form_data_ordered,
                        event_num=None, unique_event_names=None,
                        event_labels=None, session=None, record_id_field=None):
