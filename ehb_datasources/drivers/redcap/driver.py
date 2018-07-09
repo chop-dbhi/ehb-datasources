@@ -439,7 +439,6 @@ class ehbDriver(Driver, GenericDriver):
 
         Optional
         --------
-
         * record_id = id for the new record, if not supplied a random id will
             be generated
         * record_id_prefix = a prefix to prepend to the record_id
@@ -537,8 +536,8 @@ class ehbDriver(Driver, GenericDriver):
     def configure(self, driver_configuration='', *args, **kwargs):
         '''
         Configures the driver for the specific REDCap project.
-        Required Inputs (kwargs only):
 
+        Required Inputs (kwargs only):
         ------------------------------
 
         * driver_configuration : a string representation of json configuration
@@ -608,6 +607,7 @@ class ehbDriver(Driver, GenericDriver):
             self.form_names = kwargs.pop('form_names', None)
 
     def subRecordSelectionForm(self, record_id, form_url='', *args, **kwargs):
+
         '''
         Generates the REDCap data entry table.
 
@@ -717,11 +717,6 @@ class ehbDriver(Driver, GenericDriver):
                     y: x + ' ' + y.capitalize(),
                     fn.split('_'), '') + '</td>'
 
-                # return row + ('<td><button data-toggle="modal"' +
-                #               ' data-backdrop="static" data-keyboard="false"' +
-                #               ' href="#pleaseWaitModal" class="btn btn-small' +
-                #               ' btn-primary" onclick="location.href=\'' +
-                #               form_url + str(i) + '/\'">Edit</button></td>')
                 first_string = ('<td><button data-toggle="modal"' +
                               ' data-backdrop="static" data-keyboard="false"' +
                               ' href="#pleaseWaitModal"' )
@@ -805,27 +800,31 @@ class ehbDriver(Driver, GenericDriver):
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
 
-
-
     def subRecordForm(self, external_record, form_spec='', *args, **kwargs):
         '''
         Generates a REDCap data entry form for a specific ExternalRecord and
         REDCap Form and event. It is necessary to call configure before calling
         this method.
+
         Required Inputs (kwargs):
         -------------------------
+
         * external_record = ExternalRecord object from ehb_client
         * form_spec = String in the form N_M
             N is the form number (0 indexed)
             M is the event number (0 indexed).
+
         The form and event numbers are mapped to form names and event names in
         the order they were provided in the call to configure
         If the REDCap project is not longitudinal (i.e. Survey or Data Forms
         Classic) the event number is not required and will be ignored if
         included
+
         Optional Inputs:
         ----------------
+
         session = the session var.
+
         If provided the driver will use the session var to cache form field
         names which improves save time performance
         '''
@@ -866,15 +865,11 @@ class ehbDriver(Driver, GenericDriver):
         form_name = self.form_data_ordered[form_num]
         # need to get the meta data from REDCAp to construct the form and the
         # record to populate previously entered values
-
-
         form_builder = FormBuilderJson()
-
-
         meta_data = self.raw_to_json(self.meta(
             _format=self.FORMAT_JSON,
-            rawResponse=True))
-
+            rawResponse=True)
+        )
         session = kwargs.get('session', None)
 
         if self.form_names:
@@ -897,10 +892,8 @@ class ehbDriver(Driver, GenericDriver):
             temp = self.get(_format=self.FORMAT_JSON,
                             rawResponse=True,
                             records=[er.record_id])
-
             record_set = temp.read().strip()
             record_set = self.raw_to_json(record_set)
-
             return form_builder.construct_form(meta_data,
                                                record_set,
                                                form_name,
@@ -930,14 +923,17 @@ class ehbDriver(Driver, GenericDriver):
         object assuming that data was generated as from the form created by
         the subRecordForm method in this class. It is necessary to call
         configure before calling this method.
+
         Required Kwargs:
         ----------------
+
         * request - The HTTP Request object
         * external_record = ExternalRecord object from ehb_client
         * form_spec = String in the form N_M where N is the form number
         (0 indexed) and M is the event number (0 indexed). The form and event
         numbers are mapped to form names and event names in the order they were
         provided the call to configure
+        
         Optional Inputs
         * session = the session var. If provided the driver will use the
         session var to cache form field names which improves performance'''
