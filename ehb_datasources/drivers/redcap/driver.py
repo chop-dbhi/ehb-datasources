@@ -24,11 +24,9 @@ class GenericDriver(RequestHandler):
     '''
     Designed to allow making multiple request to a REDCap API for a specific
     user token.
-
     Note that REDCap tokens are unique to the user and REDCap project. Thus if
     a single user is to access multiple projects, it will be necessary to
     create multiple instances of this class OR change the token.
-
     Supports imports, exports, and exporting metadata. Currently files are
     not handled.
     '''
@@ -76,18 +74,14 @@ class GenericDriver(RequestHandler):
         Attempts to write records contained in data to REDCap project
         associated with the current token. The REDCap API currently works
         reliably on while using XML formatting.
-
         Inputs:
         -------
-
         * _format : the format of the data to be written (json, xml, csv).
         * type = : record structure used in data
         * headers : header dictionary sent in request
         * useRawData : boolean.
-
             If True, this method assumes data is a String that is in the
             correct format for the request.
-
             If False (default), this method tries to convert data to a String
             for the request as follows:
                 if format==FORMAT_JSON assumes data is a list OR dict and
@@ -95,14 +89,10 @@ class GenericDriver(RequestHandler):
                 if format==FORMAT_XML assumes data=xml.dom.minidom instance and
                     converts as data.toxml('UTF-8')
                 if format==FORMAT_CSVdata = string, no conversion
-
         * data : string, list, dict, or xml.dom.minidom
-
         Outputs:
         --------
-
         * Integer -- number of records created
-
         '''
 
         if useRawData:
@@ -152,26 +142,21 @@ class GenericDriver(RequestHandler):
         '''
         Attempts to read records from the REDCap project associated with the
         current token.
-
         Inputs:
         -------
-
         * _format : the format of the string response returned by the REDCap
             api, default JSON
         * _type : record structure in response, default is flat
         * headers : headers dictionary sent in request
         * rawResponse : boolean.
-
             If True, this method will return the String response received from
             the REDCap server,
             If False, the String response will be converted to:
                 if _format==FORMAT_JSON : Python json object
                 if _format==FORMAT_XML : Python xml.dom.minidom
                 if _format==FORMAT_CSV : Unprocessed String
-
         Allowed Kwargs:
         ---------------
-
         * records: an iterable collection of record ids to read, default is
             all records
         * fields: an iterable collection of field names to read, default is
@@ -183,7 +168,6 @@ class GenericDriver(RequestHandler):
             for (longitudinal only) default is all.
         * event: a String value indicating whether the Event Label or
             Unique Event Name should be exported default is label
-
         '''
 
         params = {
@@ -219,32 +203,26 @@ class GenericDriver(RequestHandler):
         '''
         Attempts to read metadata from the REDCap project associated with the
         current token.
-
         Inputs:
         -------
-
         * _format : the format of the string response returned by the REDCap
             api, default JSON
         * type : record structure in response, default is flat
         * headers : headers dictionary sent in request
         * rawResponse : boolean.
-
             If True, this method will return the String response received from
             the REDCap server,
             If False, the String response will be converted to:
                 if _format==FORMAT_JSON : Python json object
                 if _format==FORMAT_XML : Python xml.dom.minidom
                 if _format==FORMAT_CSV : Unprocessed String
-
         Allowed Kwargs:
         ---------------
-
         * fields: An iterable collection of field names to read, default is
             all fields
         * forms: An iterable collection of form names to read, default is
             all form names with spaces will automatically be converted to
             underscored version
-
         '''
         params = {
             'token': self.token,
@@ -368,15 +346,11 @@ class ehbDriver(Driver, GenericDriver):
     def get(self, record_id=None, *args, **kwargs):
         '''
         Retrieves records from REDCap
-
         Required Inputs
         ---------------
-
         * None: will return all records in json format
-
         Optional Inputs
         ---------------
-
         * record_id : id of the desired record
         * format
         * type
@@ -387,14 +361,11 @@ class ehbDriver(Driver, GenericDriver):
         * forms
         * events
         * event
-
         Also see GenericDriver.read_records doc
-
         If record_id and records are both specified, the union of the
         corresponding records will be returned.
         If ONLY record_id is specified (indicating a single record is desired)
         and NO record is found, a RecordDoesNotExist exception will be raised.
-
         '''
 
         # record_id = kwargs.pop('record_id',None)
@@ -449,7 +420,6 @@ class ehbDriver(Driver, GenericDriver):
     def create(self, record_id_prefix, record_id_validator, *args, **kwargs):
         '''
         Creates a REDCap record.
-
         Optional
         --------
         * record_id = id for the new record, if not supplied a random id will
@@ -457,10 +427,8 @@ class ehbDriver(Driver, GenericDriver):
         * record_id_prefix = a prefix to prepend to the record_id
             (particularly intended for identifying a record as belonging to a
             group)
-
             If both a rec_id_prefix AND a record_id are supplied, the prefix
             will be added to the record_id
-
         * redcap_event_name = the event name used for initial record creation,
             if not provided the first event name provide in the configuration
             setup will be used for longitudinal studies. Ignored for Survey
@@ -468,7 +436,6 @@ class ehbDriver(Driver, GenericDriver):
         * record_values = dictionary of record fields and values to add to
             initial record
         * overwrite = overwrite behavior, choices are *overwrite* and *normal*
-
         '''
 
         def validate_id(pid):
@@ -551,21 +518,16 @@ class ehbDriver(Driver, GenericDriver):
     def configure(self, driver_configuration='', *args, **kwargs):
         '''
         Configures the driver for the specific REDCap project.
-
         Required Inputs (kwargs only):
         ------------------------------
-
         * driver_configuration : a string representation of json configuration
             data of the form:
-
             Single Survey or Data Entry Forms Classic (i.e. non longitudinal)
             -----------------------------------------------------------------
             {
                 "form_names":["value", ...]
             }
-
             OR
-
             Data Entry Longitudinal
             -----------------------
             {
@@ -573,15 +535,10 @@ class ehbDriver(Driver, GenericDriver):
                 "event_labels":["value", ...],
                 "form_data":{"form_name":[0,1,...], ...}
             }
-
         ***
-
         Single Survey or Data Entry Forms
-
         * form_names: List[String]
-
         Data Entry Longitudinal
-
         * unique_event_names: List[String] , the event names for this REDCap
           project
         * event_labels : List[String]
@@ -628,15 +585,12 @@ class ehbDriver(Driver, GenericDriver):
             self.form_event_data = kwargs.pop('form_event_data', None)
             self.form_names = kwargs.pop('form_names', None)
 
-    def subRecordSelectionForm(self, record_id, record, form_url='',  *args, **kwargs):
+    def subRecordSelectionForm(self, record_id, form_url='',  *args, **kwargs):
         '''
         Generates the REDCap data entry table.
-
         Requires that the configure method has been called previously.
-
         Required Input (kwargs):
         ------------------------
-
         form_url = the prefix for the url for further form rendering
         '''
         # make sure the configure method has been called
@@ -655,9 +609,6 @@ class ehbDriver(Driver, GenericDriver):
                 yield start
                 start += 1
 
-
-        r_id = record           # r_id is the subject record ID
-
         all_form_status = {}    # dictionary to hold all forms, and their corresponding status
                                 # Key: Str(Form_spec), Value: Int(Completion_status)
 
@@ -666,11 +617,10 @@ class ehbDriver(Driver, GenericDriver):
         # Incomplete (0) displays red
         # Unverified (1) displays yellow
         # Complete (2) displays green
-
         def find_completed_forms_nonlongitudinal(self):
             for fn in self.form_names:
                 record_set = self.get(_format=self.FORMAT_JSON,
-                                      records=[r_id.record_id],
+                                      records=[record_id],
                                       rawResponse=True,
                                       forms=self.form_names).read().strip()
                 record_set = self.raw_to_json(record_set)
@@ -695,43 +645,42 @@ class ehbDriver(Driver, GenericDriver):
         def find_completed_forms_longitudinal(self):
             # going through variables in configure to find events and forms
             # used in the table rows for longitudinal studies
-            used_forms = []
-            events = []
 
-            # iterate through all the events in the study
-            for event in self.unique_event_names:
-                used_forms.clear()
-                events.clear()
-                events.append(event)
-                # iterate through all the forms in the study to...
-                for form in self.form_data.keys():
-                    event_index = self.unique_event_names.index(event)
-                    # determine if the form is on this event
-                    if self.form_data[form][event_index] == True:
-                        used_forms.append(form)
-                # returns the record set for specific forms for a specific event
-                temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
-                            records=[r_id.record_id], events=events, forms=used_forms)
-                record_set = temp.read().strip()
-                record_set = self.raw_to_json(record_set)
+            # must specify field study_id for redcap api to return
+            # study_id and event name
+            field_names = ['study_id']
 
-                for f in used_forms:
-                    # creating the field name
-                    fn_complete = f + "_complete"
-                    # recreating the form_spec
-                    key = str(list(self.form_data.keys()).index(f)) + "_" + str(event_index)
-                    # iterate through the record set to find the completion field
-                    for r in record_set:
-                        # form is incomplete
-                        if (r[fn_complete] == '0'):
-                            # append the form and value to all_form_status
+            used_forms = list(self.form_data.keys())
+            form_complete_field_names=[]
+
+            for form in used_forms:
+                form_complete_field_names.append(form + "_complete")
+                field_names.append(form + "_complete")
+
+            temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
+                        records=[record_id], fields=field_names)
+            record_set = temp.read().strip()
+            record_set = self.raw_to_json(record_set)
+            record_set = json.dumps(record_set) # have to reload json in order for the field
+            record_set = json.loads(record_set) # redcap_event_name to be read
+
+            for r in record_set:
+                redcap_eventname = r['redcap_event_name']
+                if redcap_eventname in self.unique_event_names:
+                    event_index = self.unique_event_names.index(redcap_eventname)
+
+                    for f in form_complete_field_names:
+                        form_complete_value = r[f]
+                        form_name = f[:-9]
+                        # key to match the spec for the table
+                        key = str(list(self.form_data.keys()).index(form_name)) + "_" + str(event_index)
+                        if form_complete_value == '0':
                             all_form_status[key] = 0
-                        # form is unverified
-                        elif (r[fn_complete] == '1'):
+                        elif form_complete_value == '1':
                             all_form_status[key] = 1
-                        # form is complete
-                        elif (r[fn_complete] == '2'):
+                        elif form_complete_value == '2':
                             all_form_status[key] = 2
+
             return
 
 
@@ -794,15 +743,18 @@ class ehbDriver(Driver, GenericDriver):
                 key = str(i) + "_" + str(j)
 
                 if l:
-                    # incomplete forms display blue button
-                    if all_form_status[key] == 0:
-                        return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
-                    # unverified forms display yellow button
-                    elif all_form_status[key] == 1:
-                        return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                    # complete forms display green button
-                    elif all_form_status[key] ==2:
-                        return (first_string + 'class="btn btnsmall btn-success"' + second_string)
+                    try:
+                        # incomplete forms display blue button
+                        if all_form_status[key] == 0:
+                            return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+                        # unverified forms display yellow button
+                        elif all_form_status[key] == 1:
+                            return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
+                        # complete forms display green button
+                        elif all_form_status[key] ==2:
+                            return (first_string + 'class="btn btnsmall btn-success"' + second_string)
+                    except:
+                        return (first_string + 'class="btn btnsmall btn-primary"' + second_string)
                 else:
                     return '<td></td>'
 
@@ -837,27 +789,20 @@ class ehbDriver(Driver, GenericDriver):
         Generates a REDCap data entry form for a specific ExternalRecord and
         REDCap Form and event. It is necessary to call configure before calling
         this method.
-
         Required Inputs (kwargs):
         -------------------------
-
         * external_record = ExternalRecord object from ehb_client
         * form_spec = String in the form N_M
             N is the form number (0 indexed)
             M is the event number (0 indexed).
-
         The form and event numbers are mapped to form names and event names in
         the order they were provided in the call to configure
-
         If the REDCap project is not longitudinal (i.e. Survey or Data Forms
         Classic) the event number is not required and will be ignored if
         included
-
         Optional Inputs:
         ----------------
-
         session = the session var.
-
         If provided the driver will use the session var to cache form field
         names which improves save time performance
         '''
@@ -962,17 +907,14 @@ class ehbDriver(Driver, GenericDriver):
         object assuming that data was generated as from the form created by
         the subRecordForm method in this class. It is necessary to call
         configure before calling this method.
-
         Required Kwargs:
         ----------------
-
         * request - The HTTP Request object
         * external_record = ExternalRecord object from ehb_client
         * form_spec = String in the form N_M where N is the form number
         (0 indexed) and M is the event number (0 indexed). The form and event
         numbers are mapped to form names and event names in the order they were
         provided the call to configure
-
         Optional Inputs
         * session = the session var. If provided the driver will use the
         session var to cache form field names which improves performance'''
