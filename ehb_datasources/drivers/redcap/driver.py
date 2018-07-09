@@ -102,6 +102,7 @@ class GenericDriver(RequestHandler):
         --------
 
         * Integer -- number of records created
+
         '''
         if useRawData:
             req_data = data
@@ -197,12 +198,9 @@ class GenericDriver(RequestHandler):
             params['event'] = kwargs.get('event')
 
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
-
         if rawResponse:
             return response
         else:
-
-
             return self.transformResponse(
                 _format,
                 self.processResponse(response, self.path)
@@ -213,26 +211,32 @@ class GenericDriver(RequestHandler):
         '''
         Attempts to read metadata from the REDCap project associated with the
         current token.
+
         Inputs:
         -------
+
         * _format : the format of the string response returned by the REDCap
             api, default JSON
         * type : record structure in response, default is flat
         * headers : headers dictionary sent in request
         * rawResponse : boolean.
+
             If True, this method will return the String response received from
             the REDCap server,
             If False, the String response will be converted to:
                 if _format==FORMAT_JSON : Python json object
                 if _format==FORMAT_XML : Python xml.dom.minidom
                 if _format==FORMAT_CSV : Unprocessed String
+
         Allowed Kwargs:
         ---------------
+
         * fields: An iterable collection of field names to read, default is
             all fields
         * forms: An iterable collection of form names to read, default is
             all form names with spaces will automatically be converted to
             underscored version
+
         '''
         params = {
             'token': self.token,
@@ -251,8 +255,6 @@ class GenericDriver(RequestHandler):
             self.POST(self.path, headers, params),
             self.path
         )
-
-
         if rawResponse:
             return response
         else:
@@ -314,7 +316,6 @@ class GenericDriver(RequestHandler):
 
 class ehbDriver(Driver, GenericDriver):
 
-
     def __init__(self, url, password, username=None, secure=False):
         def getHost(url):
             return url.split('/')[2]
@@ -356,11 +357,15 @@ class ehbDriver(Driver, GenericDriver):
     def get(self, record_id=None, *args, **kwargs):
         '''
         Retrieves records from REDCap
+
         Required Inputs
         ---------------
+
         * None: will return all records in json format
+
         Optional Inputs
         ---------------
+
         * record_id : id of the desired record
         * format
         * type
@@ -371,18 +376,20 @@ class ehbDriver(Driver, GenericDriver):
         * forms
         * events
         * event
+
         Also see GenericDriver.read_records doc
+
         If record_id and records are both specified, the union of the
         corresponding records will be returned.
         If ONLY record_id is specified (indicating a single record is desired)
         and NO record is found, a RecordDoesNotExist exception will be raised.
+
         '''
 
         # record_id = kwargs.pop('record_id',None)
         records = kwargs.pop('records', [])
         rawResponse = kwargs.pop('rawResponse', False)
         _format = kwargs.pop('_format', self.FORMAT_JSON)
-
         if record_id and record_id not in records:
             records.append(record_id)
         if len(records) == 1:
@@ -393,7 +400,6 @@ class ehbDriver(Driver, GenericDriver):
                     rawResponse=rawResponse,
                     **kwargs
                 )
-
                 if rv:
                     if (
                         not rawResponse and
@@ -430,15 +436,19 @@ class ehbDriver(Driver, GenericDriver):
     def create(self, record_id_prefix, record_id_validator, *args, **kwargs):
         '''
         Creates a REDCap record.
+
         Optional
         --------
+
         * record_id = id for the new record, if not supplied a random id will
             be generated
         * record_id_prefix = a prefix to prepend to the record_id
             (particularly intended for identifying a record as belonging to a
             group)
+
             If both a rec_id_prefix AND a record_id are supplied, the prefix
             will be added to the record_id
+
         * redcap_event_name = the event name used for initial record creation,
             if not provided the first event name provide in the configuration
             setup will be used for longitudinal studies. Ignored for Survey
@@ -446,6 +456,7 @@ class ehbDriver(Driver, GenericDriver):
         * record_values = dictionary of record fields and values to add to
             initial record
         * overwrite = overwrite behavior, choices are *overwrite* and *normal*
+
         '''
 
         def validate_id(pid):
@@ -479,10 +490,8 @@ class ehbDriver(Driver, GenericDriver):
                 ['study_id', 'redcap_event_name', 'form_names']
             )
 
-
         meta_data = self.meta(_format=self.FORMAT_XML)
         records = meta_data.getElementsByTagName('records')
-
 
         if records and len(records) == 1:
             # it is assumed that the first item in the meta data is the
@@ -529,15 +538,20 @@ class ehbDriver(Driver, GenericDriver):
         '''
         Configures the driver for the specific REDCap project.
         Required Inputs (kwargs only):
+
         ------------------------------
+
         * driver_configuration : a string representation of json configuration
             data of the form:
+
             Single Survey or Data Entry Forms Classic (i.e. non longitudinal)
             -----------------------------------------------------------------
             {
                 "form_names":["value", ...]
             }
+
             OR
+
             Data Entry Longitudinal
             -----------------------
             {
@@ -545,10 +559,15 @@ class ehbDriver(Driver, GenericDriver):
                 "event_labels":["value", ...],
                 "form_data":{"form_name":[0,1,...], ...}
             }
+
         ***
+
         Single Survey or Data Entry Forms
+
         * form_names: List[String]
+
         Data Entry Longitudinal
+
         * unique_event_names: List[String] , the event names for this REDCap
           project
         * event_labels : List[String]
@@ -570,9 +589,7 @@ class ehbDriver(Driver, GenericDriver):
                 # longitudinal study
                 self.form_data_ordered = []
                 self.unique_event_names = json_config['unique_event_names']
-
                 self.event_labels = json_config['event_labels']
-
                 self.form_data = {}
                 for k in list(json_config['form_data'].keys()):
                     bools = []
@@ -580,31 +597,28 @@ class ehbDriver(Driver, GenericDriver):
                     for v in values:
                         bools.append(v == 1)
                     self.form_data[k] = bools
-
                 temp = config[config.index('form_data') + 12: len(config)]
                 temp = temp[0: temp.index('}')]
-
                 for item in re.findall(r'"[^"\r\n]*"', temp):
                     self.form_data_ordered.append(item[1: len(item) - 1])
-
-
-
         else:
             self.unique_event_names = kwargs.pop('unique_event_names', None)
             self.event_labels = kwargs.pop('event_labels', None)
             self.form_event_data = kwargs.pop('form_event_data', None)
             self.form_names = kwargs.pop('form_names', None)
 
-    def subRecordSelectionForm(self, record_id, form_url='',  *args, **kwargs):
+    def subRecordSelectionForm(self, record_id, form_url='', *args, **kwargs):
         '''
         Generates the REDCap data entry table.
+
         Requires that the configure method has been called previously.
+
         Required Input (kwargs):
         ------------------------
+
         form_url = the prefix for the url for further form rendering
         '''
         # make sure the configure method has been called
-
         if not self.form_names and not (
             self.event_labels and
             self.unique_event_names and
@@ -612,7 +626,6 @@ class ehbDriver(Driver, GenericDriver):
             form_url
         ):
             return None
-
 
         def counter(start):
             while True:
