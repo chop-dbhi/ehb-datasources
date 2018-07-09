@@ -24,9 +24,11 @@ class GenericDriver(RequestHandler):
     '''
     Designed to allow making multiple request to a REDCap API for a specific
     user token.
+
     Note that REDCap tokens are unique to the user and REDCap project. Thus if
     a single user is to access multiple projects, it will be necessary to
     create multiple instances of this class OR change the token.
+
     Supports imports, exports, and exporting metadata. Currently files are
     not handled.
     '''
@@ -74,14 +76,18 @@ class GenericDriver(RequestHandler):
         Attempts to write records contained in data to REDCap project
         associated with the current token. The REDCap API currently works
         reliably on while using XML formatting.
+
         Inputs:
         -------
+
         * _format : the format of the data to be written (json, xml, csv).
         * type = : record structure used in data
         * headers : header dictionary sent in request
         * useRawData : boolean.
+
             If True, this method assumes data is a String that is in the
             correct format for the request.
+
             If False (default), this method tries to convert data to a String
             for the request as follows:
                 if format==FORMAT_JSON assumes data is a list OR dict and
@@ -89,12 +95,14 @@ class GenericDriver(RequestHandler):
                 if format==FORMAT_XML assumes data=xml.dom.minidom instance and
                     converts as data.toxml('UTF-8')
                 if format==FORMAT_CSVdata = string, no conversion
+
         * data : string, list, dict, or xml.dom.minidom
+
         Outputs:
         --------
+
         * Integer -- number of records created
         '''
-
         if useRawData:
             req_data = data
         else:
@@ -109,7 +117,6 @@ class GenericDriver(RequestHandler):
             'overwriteBehavior': overwrite,
             'data': req_data
         }
-
         params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
         response = self.POST(self.path, headers, urllib.parse.urlencode(params))
         if response.status == 201 or response.status == 200:
@@ -138,25 +145,29 @@ class GenericDriver(RequestHandler):
 
     def read_records(self, _format=FORMAT_JSON, _type=TYPE_FLAT,
                      headers=STANDARD_HEADER, rawResponse=False, **kwargs):
-
         '''
         Attempts to read records from the REDCap project associated with the
         current token.
+
         Inputs:
         -------
+
         * _format : the format of the string response returned by the REDCap
             api, default JSON
         * _type : record structure in response, default is flat
         * headers : headers dictionary sent in request
         * rawResponse : boolean.
+
             If True, this method will return the String response received from
             the REDCap server,
             If False, the String response will be converted to:
                 if _format==FORMAT_JSON : Python json object
                 if _format==FORMAT_XML : Python xml.dom.minidom
                 if _format==FORMAT_CSV : Unprocessed String
+
         Allowed Kwargs:
         ---------------
+
         * records: an iterable collection of record ids to read, default is
             all records
         * fields: an iterable collection of field names to read, default is
@@ -168,8 +179,8 @@ class GenericDriver(RequestHandler):
             for (longitudinal only) default is all.
         * event: a String value indicating whether the Event Label or
             Unique Event Name should be exported default is label
-        '''
 
+        '''
         params = {
             'token': self.token,
             'content': self.CONTENT_RECORD,
@@ -181,7 +192,6 @@ class GenericDriver(RequestHandler):
         for item in ['records', 'fields', 'forms', 'events']:
             if kwargs.get(item):
                 params[item] = self.build_parameter(kwargs.get(item))
-
 
         if kwargs.get('event'):
             params['event'] = kwargs.get('event')
