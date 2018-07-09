@@ -87,17 +87,11 @@ class FormBuilderJson(object):
         form_fields = [
             item for item in meta if item.get("form_name") == form_name
         ]
-
-
         self.form_fields = form_fields
-
         # Remove identifiers from form &
-
-
         for field in self.form_fields:
             if field['field_name'] == self.record_id_field:
                 self.form_fields.remove(field)
-
         master_dep_map, branch_logic_functions, apriori_branch_evals = self.build_branch_logic(
             meta, record_set, form_name, event_num, unique_event_names, event_labels)
         html = redcapTemplate("""
