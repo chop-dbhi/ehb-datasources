@@ -245,11 +245,6 @@ class RequestHandler(object):
 
     def POST(self, path='', headers='', body=''):
         self.lastrequestbody = body
-        print ("in post 248")
-        print (body)
-        print (headers)
-        print (path)
-
         return self.sendRequest('POST', path, headers, body)
 
     def GET(self, path='', headers='', body=''):
@@ -314,7 +309,6 @@ class RequestHandler(object):
 
         try:
             #return json.loads(raw_string)
-            print ("we are in base raw response 309")
             return json.loads(raw_string.decode('utf-8', 'backslashreplace'))
         except:
             raise
