@@ -641,29 +641,34 @@ class ehbDriver(Driver, GenericDriver):
         # Unverified (1) displays yellow
         # Complete (2) displays green
         def find_completed_forms_nonlongitudinal(self):
-            for fn in self.form_names:
-                record_set = self.get(_format=self.FORMAT_JSON,
-                                      records=[record_id],
-                                      rawResponse=True,
-                                      forms=self.form_names).read().strip()
-                record_set = self.raw_to_json(record_set)
-                fn_complete = fn + "_complete"
-                # key is the form spec according to driver config
-                key = str(self.form_names.index(fn))
 
-                # iterate through the record set to find the completion field
-                for r in record_set:
-                    # form is incomplete
-                    if (r[fn_complete] == '0'):
-                        # append the form and value to all_form_status
-                        all_form_status[key] = 0
+            form_complete_field_names=[]
+
+            for fn in self.form_names:
+                form_complete_field_names.append(fn + "_complete")
+
+            record_set = self.get(_format=self.FORMAT_JSON,
+                                  records=[record_id],
+                                  rawResponse=True,
+                                  fields=form_complete_field_names).read().strip()
+            record_set = self.raw_to_json(record_set)
+
+            # iterate through the record set to find the completion field
+            for r in record_set:
+                for f in form_complete_field_names:
+                    form_complete_value = r[f]
+                    form_name = f[:-9]
+
+                    # key is the form spec according to driver config
+                    key = str(self.form_names.index(form_name))
+
                     # form is unverified
-                    elif (r[fn_complete] == '1'):
+                    if (form_complete_value == '1'):
                         all_form_status[key] = 1
                     # form is complete
-                    elif (r[fn_complete] == '2'):
+                    elif (form_complete_value == '2'):
                         all_form_status[key] = 2
-            return
+                return
 
         def find_completed_forms_longitudinal(self):
             # going through variables in configure to find events and forms
@@ -697,9 +702,9 @@ class ehbDriver(Driver, GenericDriver):
                         form_name = f[:-9]
                         # key to match the spec for the table
                         key = str(list(self.form_data.keys()).index(form_name)) + "_" + str(event_index)
-                        if form_complete_value == '0':
-                            all_form_status[key] = 0
-                        elif form_complete_value == '1':
+                        # if form_complete_value == '0':
+                        #     all_form_status[key] = 0
+                        if form_complete_value == '1':
                             all_form_status[key] = 1
                         elif form_complete_value == '2':
                             all_form_status[key] = 2
@@ -710,6 +715,48 @@ class ehbDriver(Driver, GenericDriver):
         if self.form_names:
             # The project is not longitudinal
             find_completed_forms_nonlongitudinal(self)
+
+            # def makeRow(fn, i):
+            #     key = str(i)
+            #     row = '<tr><td>' + reduce(
+            #         lambda x,
+            #         y: x + ' ' + y.capitalize(),
+            #         fn.split('_'), '') + '</td>'
+            #
+            #     first_string = ('<td><button data-toggle="modal"' +
+            #                   ' data-backdrop="static" data-keyboard="false"' +
+            #                   ' href="#pleaseWaitModal"' )
+            #     if 'first_string' in cache_form_data:
+            #         print ("first string already defined")
+            #     else:
+            #         cache_form_data['first_string'] = first_string
+            #     second_string = (' onclick="location.href=\'' +
+            #                     form_url + str(i) + '/\'">Edit</button></td>')
+            #
+            #     # incomplete forms display blue button
+            #     if all_form_status[key] == 0:
+            #         return row + ('class="btn btnsmall + btn-primary"' + second_string)
+            #     # unverified forms display yellow button
+            #     elif all_form_status[key] == 1:
+            #         return row + ('class="btn btnsmall btn-warning"' + second_string)
+            #     # complete forms display green button
+            #     elif all_form_status[key] ==2:
+            #         return row + ('class="btn btnsmall btn-success"' + second_string)
+            # cache_form_data = {}
+            # form = ('<table class="table table-bordered table-striped ' +
+            #         'table-condensed"><tr><th>Data Form</th><th></th></tr>')
+            # cache_form_data['table_definition'] = form
+            # count = counter(0)
+            # rows = [makeRow(fn, next(count)) for fn in self.form_names]
+            # row_info = '___'.join(rows) + '</table>'
+            # cache_form_data['rows'] = row_info
+            #
+            # # form += ''.join(rows) + '</table>'
+            # print ("this is cache_form_data")
+            # print (cache_form_data)
+            # return cache_form_data
+
+
             def makeRow(fn, i):
                 key = str(i)
                 row = '<tr><td>' + reduce(
@@ -724,14 +771,18 @@ class ehbDriver(Driver, GenericDriver):
                                 form_url + str(i) + '/\'">Edit</button></td>')
 
                 # incomplete forms display blue button
-                if all_form_status[key] == 0:
+                try:
+                    # if all_form_status[key] == 0:
+                    #     return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+                    # unverified forms display yellow button
+                    if all_form_status[key] == 1:
+                        return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
+                    # complete forms display green button
+                    elif all_form_status[key] ==2:
+                        return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
+
+                except:
                     return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
-                # unverified forms display yellow button
-                elif all_form_status[key] == 1:
-                    return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                # complete forms display green button
-                elif all_form_status[key] ==2:
-                    return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
 
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
@@ -763,10 +814,10 @@ class ehbDriver(Driver, GenericDriver):
                 if l:
                     try:
                         # incomplete forms display blue button
-                        if all_form_status[key] == 0:
-                            return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+                        # if all_form_status[key] == 0:
+                        #     return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
                         # unverified forms display yellow button
-                        elif all_form_status[key] == 1:
+                        if all_form_status[key] == 1:
                             return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
                         # complete forms display green button
                         elif all_form_status[key] ==2:
@@ -933,7 +984,7 @@ class ehbDriver(Driver, GenericDriver):
         (0 indexed) and M is the event number (0 indexed). The form and event
         numbers are mapped to form names and event names in the order they were
         provided the call to configure
-        
+
         Optional Inputs
         * session = the session var. If provided the driver will use the
         session var to cache form field names which improves performance'''
