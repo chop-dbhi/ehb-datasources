@@ -88,7 +88,7 @@ class FormBuilderJson(object):
             item for item in meta if item.get("form_name") == form_name
         ]
         self.form_fields = form_fields
-        # Remove identifiers from form &
+        # Remove identifiers from form
         for field in self.form_fields:
             if field['field_name'] == self.record_id_field:
                 self.form_fields.remove(field)
