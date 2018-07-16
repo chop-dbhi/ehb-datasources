@@ -609,17 +609,17 @@ class ehbDriver(Driver, GenericDriver):
     # new function to find and display redcap form status
     def find_completed_forms(self, record_id, form_url='', *args, **kwargs):
         all_form_status = {}
+
         def find_completed_forms_nonlongitudinal(self):
             form_complete_field_names=[]
+            # construct field name for completion field in every form
             for fn in self.form_names:
                 form_complete_field_names.append(fn + "_complete")
-
             record_set = self.get(_format=self.FORMAT_JSON,
                                   records=[record_id],
                                   rawResponse=True,
                                   fields=form_complete_field_names).read().strip()
             record_set = self.raw_to_json(record_set)
-
             # iterate through the record set to find the completion field
             for r in record_set:
                 for f in form_complete_field_names:
@@ -636,29 +636,26 @@ class ehbDriver(Driver, GenericDriver):
             return all_form_status
 
         def find_completed_forms_longitudinal(self):
-            # must specify field study_id for redcap api to return
-            # study_id and event name
+            # must specify field study_id for redcap api to return study_id and event name
             field_names = ['study_id']
-
+            # get from config a list of the forms
             used_forms = list(self.form_data.keys())
             form_complete_field_names=[]
-
+            # construct field name for completion field in every form
             for form in used_forms:
                 form_complete_field_names.append(form + "_complete")
                 field_names.append(form + "_complete")
-
             temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
                         records=[record_id], fields=field_names)
             record_set = temp.read().strip()
             record_set = self.raw_to_json(record_set)
             record_set = json.dumps(record_set) # have to reload json in order for the field
             record_set = json.loads(record_set) # redcap_event_name to be read
-
+            # iterate through the record set to find the completion field
             for r in record_set:
                 redcap_eventname = r['redcap_event_name']
                 if redcap_eventname in self.unique_event_names:
                     event_index = self.unique_event_names.index(redcap_eventname)
-
                     for f in form_complete_field_names:
                         form_complete_value = r[f]
                         form_name = f[:-9]
@@ -674,9 +671,6 @@ class ehbDriver(Driver, GenericDriver):
             return find_completed_forms_nonlongitudinal(self)
         else:
             return find_completed_forms_longitudinal(self)
-
-
-
 
     def subRecordSelectionForm(self, record_id, form_url='', redcap_form_complete_codes={}, *args, **kwargs):
 
