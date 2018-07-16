@@ -704,32 +704,21 @@ class ehbDriver(Driver, GenericDriver):
                 yield start
                 start += 1
 
-
-
-        all_form_status = redcap_form_complete_codes   # dictionary to hold all forms, and their corresponding status
-                                                # Key: Str(Form_spec), Value: Int(Completion_status)
-
-
+        all_form_status = redcap_form_complete_codes
         if self.form_names:
             # The project is not longitudinal
-
             def makeRow(fn, i):
                 key = str(i)
                 row = '<tr><td>' + reduce(
                     lambda x,
                     y: x + ' ' + y.capitalize(),
                     fn.split('_'), '') + '</td>'
-
                 first_string = ('<td><button data-toggle="modal"' +
                               ' data-backdrop="static" data-keyboard="false"' +
                               ' href="#pleaseWaitModal"' )
                 second_string = (' onclick="location.href=\'' +
                                 form_url + str(i) + '/\'">Edit</button></td>')
-
-                # incomplete forms display blue button
                 try:
-                    # if all_form_status[key] == 0:
-                    #     return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
                     # unverified forms display yellow button
                     if all_form_status[key] == 1:
                         return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
@@ -737,6 +726,7 @@ class ehbDriver(Driver, GenericDriver):
                     elif all_form_status[key] ==2:
                         return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
                 except:
+                    # incomplete forms display blue button
                     return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
 
             form = ('<table class="table table-bordered table-striped ' +
@@ -760,7 +750,6 @@ class ehbDriver(Driver, GenericDriver):
 
             def make_td(i, j, l):
                 first_string = '<td><button data-toggle="modal"' + 'data-backdrop="static" data-keyboard="false" ' + 'href="#pleaseWaitModal"'
-
                 second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
                 key = str(i) + "_" + str(j)
                 if l:
