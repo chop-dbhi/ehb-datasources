@@ -606,44 +606,11 @@ class ehbDriver(Driver, GenericDriver):
             self.form_event_data = kwargs.pop('form_event_data', None)
             self.form_names = kwargs.pop('form_names', None)
 
-    def subRecordSelectionForm(self, record_id, form_url='', *args, **kwargs):
-
-        '''
-        Generates the REDCap data entry table.
-
-        Requires that the configure method has been called previously.
-
-        Required Input (kwargs):
-        ------------------------
-
-        form_url = the prefix for the url for further form rendering
-        '''
-        # make sure the configure method has been called
-        if not self.form_names and not (
-            self.event_labels and
-            self.unique_event_names and
-            self.form_data and
-            form_url
-        ):
-            return None
-
-        def counter(start):
-            while True:
-                yield start
-                start += 1
-
-        all_form_status = {}    # dictionary to hold all forms, and their corresponding status
-                                # Key: Str(Form_spec), Value: Int(Completion_status)
-
-        # new function to find and display form status
-        # to users through coded colors.
-        # Incomplete (0) displays red
-        # Unverified (1) displays yellow
-        # Complete (2) displays green
+    # new function to find and display redcap form status
+    def find_completed_forms(self, record_id, form_url='', *args, **kwargs):
+        all_form_status = {}
         def find_completed_forms_nonlongitudinal(self):
-
             form_complete_field_names=[]
-
             for fn in self.form_names:
                 form_complete_field_names.append(fn + "_complete")
 
@@ -658,22 +625,17 @@ class ehbDriver(Driver, GenericDriver):
                 for f in form_complete_field_names:
                     form_complete_value = r[f]
                     form_name = f[:-9]
-
                     # key is the form spec according to driver config
                     key = str(self.form_names.index(form_name))
-
                     # form is unverified
                     if (form_complete_value == '1'):
                         all_form_status[key] = 1
                     # form is complete
                     elif (form_complete_value == '2'):
                         all_form_status[key] = 2
-                return
+            return all_form_status
 
         def find_completed_forms_longitudinal(self):
-            # going through variables in configure to find events and forms
-            # used in the table rows for longitudinal studies
-
             # must specify field study_id for redcap api to return
             # study_id and event name
             field_names = ['study_id']
@@ -702,60 +664,54 @@ class ehbDriver(Driver, GenericDriver):
                         form_name = f[:-9]
                         # key to match the spec for the table
                         key = str(list(self.form_data.keys()).index(form_name)) + "_" + str(event_index)
-                        # if form_complete_value == '0':
-                        #     all_form_status[key] = 0
                         if form_complete_value == '1':
                             all_form_status[key] = 1
                         elif form_complete_value == '2':
                             all_form_status[key] = 2
+            return all_form_status
 
-            return
+        if self.form_names:
+            return find_completed_forms_nonlongitudinal(self)
+        else:
+            return find_completed_forms_longitudinal(self)
+
+
+
+
+    def subRecordSelectionForm(self, record_id, form_url='', redcap_form_complete_codes={}, *args, **kwargs):
+
+        '''
+        Generates the REDCap data entry table.
+
+        Requires that the configure method has been called previously.
+
+        Required Input (kwargs):
+        ------------------------
+
+        form_url = the prefix for the url for further form rendering
+        '''
+        # make sure the configure method has been called
+        if not self.form_names and not (
+            self.event_labels and
+            self.unique_event_names and
+            self.form_data and
+            form_url
+        ):
+            return None
+
+        def counter(start):
+            while True:
+                yield start
+                start += 1
+
+
+
+        all_form_status = redcap_form_complete_codes   # dictionary to hold all forms, and their corresponding status
+                                                # Key: Str(Form_spec), Value: Int(Completion_status)
 
 
         if self.form_names:
             # The project is not longitudinal
-            find_completed_forms_nonlongitudinal(self)
-
-            # def makeRow(fn, i):
-            #     key = str(i)
-            #     row = '<tr><td>' + reduce(
-            #         lambda x,
-            #         y: x + ' ' + y.capitalize(),
-            #         fn.split('_'), '') + '</td>'
-            #
-            #     first_string = ('<td><button data-toggle="modal"' +
-            #                   ' data-backdrop="static" data-keyboard="false"' +
-            #                   ' href="#pleaseWaitModal"' )
-            #     if 'first_string' in cache_form_data:
-            #         print ("first string already defined")
-            #     else:
-            #         cache_form_data['first_string'] = first_string
-            #     second_string = (' onclick="location.href=\'' +
-            #                     form_url + str(i) + '/\'">Edit</button></td>')
-            #
-            #     # incomplete forms display blue button
-            #     if all_form_status[key] == 0:
-            #         return row + ('class="btn btnsmall + btn-primary"' + second_string)
-            #     # unverified forms display yellow button
-            #     elif all_form_status[key] == 1:
-            #         return row + ('class="btn btnsmall btn-warning"' + second_string)
-            #     # complete forms display green button
-            #     elif all_form_status[key] ==2:
-            #         return row + ('class="btn btnsmall btn-success"' + second_string)
-            # cache_form_data = {}
-            # form = ('<table class="table table-bordered table-striped ' +
-            #         'table-condensed"><tr><th>Data Form</th><th></th></tr>')
-            # cache_form_data['table_definition'] = form
-            # count = counter(0)
-            # rows = [makeRow(fn, next(count)) for fn in self.form_names]
-            # row_info = '___'.join(rows) + '</table>'
-            # cache_form_data['rows'] = row_info
-            #
-            # # form += ''.join(rows) + '</table>'
-            # print ("this is cache_form_data")
-            # print (cache_form_data)
-            # return cache_form_data
-
 
             def makeRow(fn, i):
                 key = str(i)
@@ -780,7 +736,6 @@ class ehbDriver(Driver, GenericDriver):
                     # complete forms display green button
                     elif all_form_status[key] ==2:
                         return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
-
                 except:
                     return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
 
@@ -803,19 +758,13 @@ class ehbDriver(Driver, GenericDriver):
                 self.event_labels,
                 '') + '</tr>'
 
-            find_completed_forms_longitudinal(self)
-
             def make_td(i, j, l):
                 first_string = '<td><button data-toggle="modal"' + 'data-backdrop="static" data-keyboard="false" ' + 'href="#pleaseWaitModal"'
 
                 second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
                 key = str(i) + "_" + str(j)
-
                 if l:
                     try:
-                        # incomplete forms display blue button
-                        # if all_form_status[key] == 0:
-                        #     return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
                         # unverified forms display yellow button
                         if all_form_status[key] == 1:
                             return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
@@ -823,6 +772,7 @@ class ehbDriver(Driver, GenericDriver):
                         elif all_form_status[key] ==2:
                             return (first_string + 'class="btn btnsmall btn-success"' + second_string)
                     except:
+                        # form is incomplete
                         return (first_string + 'class="btn btnsmall btn-primary"' + second_string)
                 else:
                     return '<td></td>'
