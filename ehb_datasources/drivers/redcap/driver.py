@@ -866,12 +866,12 @@ class ehbDriver(Driver, GenericDriver):
                                                record_set,
                                                form_name,
                                                er.record_id,
-                                               self.form_data_ordered,
                                                None,
                                                None,
                                                None,
                                                session,
-                                               self.record_id_field_name) #added form data ordered
+                                               self.record_id_field_name,
+                                               self.form_data_ordered) #added form data ordered
         else:
             temp = self.get(_format=self.FORMAT_JSON,
                             rawResponse=True,
@@ -882,12 +882,12 @@ class ehbDriver(Driver, GenericDriver):
                                                record_set,
                                                form_name,
                                                er.record_id,
-                                               self.form_data_ordered,
                                                event_num,
                                                self.unique_event_names,
                                                self.event_labels,
                                                session,
-                                               self.record_id_field_name) #added form data ordered
+                                               self.record_id_field_name,
+                                               self.form_data_ordered,) #added form data ordered
 
     def __getCDATA(self, item, tag_name, default=None):
             CDATA = item.getElementsByTagName(tag_name)

@@ -20,9 +20,9 @@ class redcapTemplate(Template):
 
 class FormBuilderJson(object):
 
-    def construct_form(self, meta, record_set, form_name, record_id, form_data_ordered,
+    def construct_form(self, meta, record_set, form_name, record_id,
                        event_num=None, unique_event_names=None,
-                       event_labels=None, session=None, record_id_field=None):
+                       event_labels=None, session=None, record_id_field=None, form_data_ordered=None):
         '''
         Constructs a string representation of an html form for the specified
         REDCap record, meta_data, form_name, event_num
