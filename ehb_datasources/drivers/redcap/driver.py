@@ -672,7 +672,7 @@ class ehbDriver(Driver, GenericDriver):
         else:
             return find_completed_forms_longitudinal(self)
 
-    def subRecordSelectionForm(self, record_id, form_url='', redcap_form_complete_codes={}, *args, **kwargs):
+    def subRecordSelectionForm(self, form_url='', redcap_form_complete_codes={}, *args, **kwargs):
 
         '''
         Generates the REDCap data entry table.
