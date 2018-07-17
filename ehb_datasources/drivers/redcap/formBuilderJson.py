@@ -20,6 +20,18 @@ class redcapTemplate(Template):
 
 class FormBuilderJson(object):
 
+    def add_completion_field (self, meta, form_name):
+        # meta to string
+        meta = json.dumps(meta)
+        # take out the ']'
+        meta = meta[:-1]
+        completion_field_meta = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
+        # add the field to the existing meta
+        meta += completion_field_meta
+        # reload meta
+        meta=json.loads(meta)
+        return meta
+
     def construct_form(self, meta, record_set, form_name, record_id,
                        event_num=None, unique_event_names=None,
                        event_labels=None, session=None, record_id_field=None):
@@ -64,26 +76,7 @@ class FormBuilderJson(object):
                 return '''
                     <div class="alert alert-danger"><center><span>There was an error retrieving this record from REDCap</span></center></div>
                 '''
-
-        ################################################
-        ####  this is to add form field completion to meta
-        ################################################
-
-        # meta to string
-        meta = json.dumps(meta)
-        # take out the ']'
-        meta = meta[:-1]
-        completion_field_meta = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
-        # add the field to the existing meta
-        meta += completion_field_meta
-
-        # reload meta
-        meta=json.loads(meta)
-
-        ################################################
-        ####  resume normal code
-        ################################################
-
+        meta = self.add_completion_field(meta, form_name) # add the completion field to the metadata
         form_fields = [
             item for item in meta if item.get("form_name") == form_name
         ]
