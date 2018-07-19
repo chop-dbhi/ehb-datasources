@@ -698,14 +698,13 @@ class ehbDriver(Driver, GenericDriver):
                 yield start
                 start += 1
 
-        all_form_status = redcap_form_complete_codes
+        # method to identify button color and icon
+        # based on form completion status
         def get_button_icon(key):
+            all_form_status = redcap_form_complete_codes
             button_icon=[]
-            print ("we called get button")
             try:
-                # unverified forms display yellow button
                 if all_form_status[key] == 1:
-                    print ("we found key in all for msttaus")
                     button_icon.append('btn-warning')
                     button_icon.append('fa-adjust')
                     return button_icon
@@ -721,23 +720,24 @@ class ehbDriver(Driver, GenericDriver):
 
         if self.form_names:
             # The project is not longitudinal
-            def makeRow(fn, i):
-                key = str(i)
+            def makeRow(form_name, form_index):
+                key = str(form_index)
                 row = '<tr><td>' + reduce(
                     lambda x,
                     y: x + ' ' + y.capitalize(),
-                    fn.split('_'), '') + '</td>'
+                    form_name.split('_'), '') + '</td>'
 
                 return row + ('<td><button data-toggle="modal"' +
                       ' data-backdrop="static" data-keyboard="false"' +
                       ' href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
-                      ' " onclick="location.href=\'' +
-                      form_url + str(i) + '/\'">Edit <i class="fa ' +'{button_icon[1]}' + '"></i></button></td>').format(button_icon=get_button_icon(key))
+                      ' " onclick="location.href=\'' + form_url + key +
+                      '/\'">Edit <i class="fa ' +'{button_icon[1]}' +
+                      '"></i></button></td>').format(button_icon=get_button_icon(key))
 
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
             count = counter(0)
-            rows = [makeRow(fn, next(count)) for fn in self.form_names]
+            rows = [makeRow(form_name, next(count)) for form_name in self.form_names]
             form += ''.join(rows) + '</table>'
             return form
         else:
@@ -753,41 +753,38 @@ class ehbDriver(Driver, GenericDriver):
                 self.event_labels,
                 '') + '</tr>'
 
-            def make_td(i, j, l):
-                first_string = '<td><button data-toggle="modal"' + 'data-backdrop="static" data-keyboard="false" ' + 'href="#pleaseWaitModal"'
-                second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
-                key = str(i) + "_" + str(j)
-                if l:
+            def make_td(form_index, event_index, form_exists):
+                key = str(form_index) + "_" + str(event_index)
+                if form_exists:
                     return ('<td><button data-toggle="modal"' +
                             'data-backdrop="static" data-keyboard="false" ' +
-                            'href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
-                            '" onclick="location.href=\'' +
-                            form_url + str(i) + '_' + str(j) + '/\'">Edit <i class="fa ' +
+                            'href="#pleaseWaitModal" class="btn btn-small ' +
+                            '{button_icon[0]}' + '" onclick="location.href=\'' +
+                            form_url + key + '/\'">Edit <i class="fa ' +
                             '{button_icon[1]}' + '"></i></button></td>').format(button_icon=get_button_icon(key))
                 else:
                     return '<td></td>'
 
-            def make_trs(i, l):
+            def make_trs(form_index, form_list):
                 count = counter(0)
-                if len(l) > 1:
+                if len(form_list) > 1:
                     return '<tr><td>' + reduce(
                         lambda x,
                         y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
+                        form_list[0].split('_'), '') + '</td>' + reduce(
                         lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
-                        '') + '</tr>' + make_trs(i + 1, l[1: len(l)])
+                        y: x + make_td(form_index, next(count), y),
+                        self.form_data[form_list[0]],
+                        '') + '</tr>' + make_trs(form_index + 1, form_list[1: len(form_list)])
                 else:
                     return '<tr><td>' + reduce(
                         lambda x,
                         y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
+                        form_list[0].split('_'), '') + '</td>' + reduce(
                         lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
+                        y: x + make_td(form_index, next(count), y),
+                        self.form_data[form_list[0]],
                         '')
-
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
 
