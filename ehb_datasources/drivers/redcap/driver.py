@@ -699,6 +699,26 @@ class ehbDriver(Driver, GenericDriver):
                 start += 1
 
         all_form_status = redcap_form_complete_codes
+        def get_button_icon(key):
+            button_icon=[]
+            print ("we called get button")
+            try:
+                # unverified forms display yellow button
+                if all_form_status[key] == 1:
+                    print ("we found key in all for msttaus")
+                    button_icon.append('btn-warning')
+                    button_icon.append('fa-adjust')
+                    return button_icon
+                elif all_form_status[key] == 2:
+                    button_icon.append('btn-success')
+                    button_icon.append('fa-circle')
+                    return button_icon
+            except:
+                button_icon.append('btn-primary')
+                button_icon.append('fa-circle-o')
+                return button_icon
+            return button_icon
+
         if self.form_names:
             # The project is not longitudinal
             def makeRow(fn, i):
@@ -707,21 +727,12 @@ class ehbDriver(Driver, GenericDriver):
                     lambda x,
                     y: x + ' ' + y.capitalize(),
                     fn.split('_'), '') + '</td>'
-                first_string = ('<td><button data-toggle="modal"' +
-                              ' data-backdrop="static" data-keyboard="false"' +
-                              ' href="#pleaseWaitModal"' )
-                second_string = (' onclick="location.href=\'' +
-                                form_url + str(i) + '/\'">Edit</button></td>')
-                try:
-                    # unverified forms display yellow button
-                    if all_form_status[key] == 1:
-                        return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                    # complete forms display green button
-                    elif all_form_status[key] ==2:
-                        return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
-                except:
-                    # incomplete forms display blue button
-                    return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
+
+                return row + ('<td><button data-toggle="modal"' +
+                      ' data-backdrop="static" data-keyboard="false"' +
+                      ' href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
+                      ' " onclick="location.href=\'' +
+                      form_url + str(i) + '/\'">Edit <i class="fa ' +'{button_icon[1]}' + '"></i></button></td>').format(button_icon=get_button_icon(key))
 
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
@@ -747,16 +758,12 @@ class ehbDriver(Driver, GenericDriver):
                 second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
                 key = str(i) + "_" + str(j)
                 if l:
-                    try:
-                        # unverified forms display yellow button
-                        if all_form_status[key] == 1:
-                            return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                        # complete forms display green button
-                        elif all_form_status[key] ==2:
-                            return (first_string + 'class="btn btnsmall btn-success"' + second_string)
-                    except:
-                        # form is incomplete
-                        return (first_string + 'class="btn btnsmall btn-primary"' + second_string)
+                    return ('<td><button data-toggle="modal"' +
+                            'data-backdrop="static" data-keyboard="false" ' +
+                            'href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
+                            '" onclick="location.href=\'' +
+                            form_url + str(i) + '_' + str(j) + '/\'">Edit <i class="fa ' +
+                            '{button_icon[1]}' + '"></i></button></td>').format(button_icon=get_button_icon(key))
                 else:
                     return '<td></td>'
 
