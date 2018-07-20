@@ -608,64 +608,70 @@ class ehbDriver(Driver, GenericDriver):
 
     # new function to find and display redcap form status
     def find_completed_forms(self, record_id, form_url='', *args, **kwargs):
-        all_form_status = {}
+
+        # construct field name for completion field in every form
+        def create_completion_field_name(list_of_forms):
+            form_completion_fields=[]
+            for form in list_of_forms:
+                form_completion_fields.append(form + "_complete")
+            return form_completion_fields
+
+        def get_form_statuses(self, record, form_completion_fields, event_index=-1):
+            form_statuses = {}
+            for f in form_completion_fields:
+                form_complete_value = record[f]
+                form_name = f[:-9]
+                # key is the form spec according to driver config
+                if event_index == -1: # nonlong study
+                    key = str(self.form_names.index(form_name))
+                else:
+                    key = str(list(self.form_data.keys()).index(form_name)) + "_" + str(event_index)
+                if (form_complete_value == '1'):
+                    form_statuses[key] = 1
+                elif (form_complete_value == '2'):
+                    form_statuses[key] = 2
+            return form_statuses
+
+        def merge_two_dicts(d_1, d_2): # deprecated, python 3.5 library has this function
+            d_3 = d_1.copy()   # start with d_1's keys and values
+            d_3.update(d_2)    # modifies d_3 with d_2's keys and values & returns None
+            return d_3
 
         def find_completed_forms_nonlongitudinal(self):
-            form_complete_field_names=[]
             # construct field name for completion field in every form
-            for fn in self.form_names:
-                form_complete_field_names.append(fn + "_complete")
+            form_completion_fields = create_completion_field_name(self.form_names)
             record_set = self.get(_format=self.FORMAT_JSON,
                                   records=[record_id],
                                   rawResponse=True,
-                                  fields=form_complete_field_names).read().strip()
+                                  fields=form_completion_fields).read().strip()
             record_set = self.raw_to_json(record_set)
             # iterate through the record set to find the completion field
             for r in record_set:
-                for f in form_complete_field_names:
-                    form_complete_value = r[f]
-                    form_name = f[:-9]
-                    # key is the form spec according to driver config
-                    key = str(self.form_names.index(form_name))
-                    # form is unverified
-                    if (form_complete_value == '1'):
-                        all_form_status[key] = 1
-                    # form is complete
-                    elif (form_complete_value == '2'):
-                        all_form_status[key] = 2
-            return all_form_status
+                form_statuses = get_form_statuses(self,r, form_completion_fields)
+            return form_statuses
 
         def find_completed_forms_longitudinal(self):
             # must specify field study_id for redcap api to return study_id and event name
             field_names = ['study_id']
-            # get from config a list of the forms
-            used_forms = list(self.form_data.keys())
-            form_complete_field_names=[]
-            # construct field name for completion field in every form
-            for form in used_forms:
-                form_complete_field_names.append(form + "_complete")
-                field_names.append(form + "_complete")
+            form_completion_fields = create_completion_field_name(list(self.form_data.keys()))
+            field_names += form_completion_fields
             temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
-                        records=[record_id], fields=field_names)
-            record_set = temp.read().strip()
-            record_set = self.raw_to_json(record_set)
+                        records=[record_id], fields=field_names).read().strip()
+            record_set = self.raw_to_json(temp)
             record_set = json.dumps(record_set) # have to reload json in order for the field
             record_set = json.loads(record_set) # redcap_event_name to be read
-            # iterate through the record set to find the completion field
-            for r in record_set:
+
+            first_event = True
+            for r in record_set: # iterate through the record set to find the completion field
                 redcap_eventname = r['redcap_event_name']
                 if redcap_eventname in self.unique_event_names:
                     event_index = self.unique_event_names.index(redcap_eventname)
-                    for f in form_complete_field_names:
-                        form_complete_value = r[f]
-                        form_name = f[:-9]
-                        # key to match the spec for the table
-                        key = str(list(self.form_data.keys()).index(form_name)) + "_" + str(event_index)
-                        if form_complete_value == '1':
-                            all_form_status[key] = 1
-                        elif form_complete_value == '2':
-                            all_form_status[key] = 2
-            return all_form_status
+                    if first_event:
+                        form_statuses = get_form_statuses(self,r, form_completion_fields, event_index)
+                        first_event = False
+                    else:
+                        form_statuses = merge_two_dicts(form_statuses, get_form_statuses(self,r, form_completion_fields, event_index))
+            return form_statuses
 
         if self.form_names:
             return find_completed_forms_nonlongitudinal(self)
@@ -704,19 +710,18 @@ class ehbDriver(Driver, GenericDriver):
             all_form_status = redcap_form_complete_codes
             button_icon=[]
             try:
-                if all_form_status[key] == 1:
+                if all_form_status[key] == 1: # form is unverified
                     button_icon.append('btn-warning')
                     button_icon.append('fa-adjust')
                     return button_icon
-                elif all_form_status[key] == 2:
+                elif all_form_status[key] == 2: # form is complete
                     button_icon.append('btn-success')
                     button_icon.append('fa-circle')
                     return button_icon
-            except:
+            except: # form is incomplete
                 button_icon.append('btn-primary')
                 button_icon.append('fa-circle-o')
                 return button_icon
-            return button_icon
 
         if self.form_names:
             # The project is not longitudinal
@@ -742,17 +747,6 @@ class ehbDriver(Driver, GenericDriver):
             return form
         else:
             # The project is longitudinal
-            number_of_events = str(len(self.event_labels))
-            form = ('<table class="table table-bordered table-striped' +
-                    'table-condensed"><tr><th rowspan="2">' +
-                    'Data Collection Instrument</th><th colspan="' +
-                    number_of_events + '">Events</th></tr>')
-            form += '<tr>' + reduce(
-                lambda x,
-                y: x + '<td>' + y + '</td>',
-                self.event_labels,
-                '') + '</tr>'
-
             def make_td(form_index, event_index, form_exists):
                 key = str(form_index) + "_" + str(event_index)
                 if form_exists:
@@ -775,7 +769,7 @@ class ehbDriver(Driver, GenericDriver):
                         lambda x,
                         y: x + make_td(form_index, next(count), y),
                         self.form_data[form_list[0]],
-                        '') + '</tr>' + make_trs(form_index + 1, form_list[1: len(form_list)])
+                        '') + '</tr>' + make_trs(form_index + 1, form_list[1: len(form_list)]) # reduces number of forms in list after its been processed
                 else:
                     return '<tr><td>' + reduce(
                         lambda x,
@@ -785,6 +779,16 @@ class ehbDriver(Driver, GenericDriver):
                         y: x + make_td(form_index, next(count), y),
                         self.form_data[form_list[0]],
                         '')
+            number_of_events = str(len(self.event_labels))
+            form = ('<table class="table table-bordered table-striped' +
+                    'table-condensed"><tr><th rowspan="2">' +
+                    'Data Collection Instrument</th><th colspan="' +
+                    number_of_events + '">Events</th></tr>')
+            form += '<tr>' + reduce(
+                lambda x,
+                y: x + '<td>' + y + '</td>',
+                self.event_labels,
+                '') + '</tr>'
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
 
