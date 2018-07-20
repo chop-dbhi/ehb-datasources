@@ -632,11 +632,6 @@ class ehbDriver(Driver, GenericDriver):
                     form_statuses[key] = 2
             return form_statuses
 
-        def merge_two_dicts(d_1, d_2): # deprecated, python 3.5 library has this function
-            d_3 = d_1.copy()   # start with d_1's keys and values
-            d_3.update(d_2)    # modifies d_3 with d_2's keys and values & returns None
-            return d_3
-
         def find_completed_forms_nonlongitudinal(self):
             # construct field name for completion field in every form
             form_completion_fields = create_completion_field_name(self.form_names)
@@ -670,7 +665,8 @@ class ehbDriver(Driver, GenericDriver):
                         form_statuses = get_form_statuses(self,r, form_completion_fields, event_index)
                         first_event = False
                     else:
-                        form_statuses = merge_two_dicts(form_statuses, get_form_statuses(self,r, form_completion_fields, event_index))
+                        # merge the 2 dictionaries
+                        form_statuses = {**form_statuses, **get_form_statuses(self,r, form_completion_fields, event_index)}
             return form_statuses
 
         if self.form_names:
@@ -730,7 +726,10 @@ class ehbDriver(Driver, GenericDriver):
                 row = '<tr><td>' + reduce(
                     lambda x,
                     y: x + ' ' + y.capitalize(),
+                    # 'hi', 'a') + '</td>'
                     form_name.split('_'), '') + '</td>'
+                print ("this is row")
+                print (row)
 
                 return row + ('<td><button data-toggle="modal"' +
                       ' data-backdrop="static" data-keyboard="false"' +
@@ -743,6 +742,7 @@ class ehbDriver(Driver, GenericDriver):
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
             count = counter(0)
             rows = [makeRow(form_name, next(count)) for form_name in self.form_names]
+            print (rows)
             form += ''.join(rows) + '</table>'
             return form
         else:
