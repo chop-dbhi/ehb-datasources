@@ -20,17 +20,38 @@ class redcapTemplate(Template):
 
 class FormBuilderJson(object):
 
-    def add_completion_field (self, meta, form_name):
-        # meta to string
+    # this method can be used to add a field not already defined in meta data to all forms
+    def add_field_to_form (self, meta, field_name="", form_name="", field_type="", field_label="", select_choices_or_calculations="",
+        section_header="", field_note="", text_validation_type_or_show_slider_number="",
+        text_validation_min="",text_validation_max="",identifier="", branching_logic="",
+        required_field="", custom_alignment="", question_number="", matrix_group_name="",
+        matrix_ranking="", field_annotation=""):
+        json_obj = {}
+        json_obj["field_name"] = field_name
+        json_obj["form_name"] = form_name
+        json_obj["section_header"] = section_header
+        json_obj["field_type"] = field_type
+        json_obj ["field_label"] = field_label
+        json_obj["select_choices_or_calculations"]= select_choices_or_calculations
+        json_obj["field_note"] = field_note
+        json_obj["text_validation_type_or_show_slider_number"] = text_validation_type_or_show_slider_number
+        json_obj["text_validation_min"] = text_validation_min
+        json_obj["text_validation_max"] = text_validation_max
+        json_obj["identifier"] = identifier
+        json_obj["branching_logic"] = branching_logic
+        json_obj["required_field"] = required_field
+        json_obj["custom_alignment"] = custom_alignment
+        json_obj["question_number"] = question_number
+        json_obj["matrix_group_name"] = matrix_group_name
+        json_obj["matrix_ranking"]= matrix_ranking
+        json_obj["field_annotation"] = field_annotation
+        json_obj = json.dumps(json_obj)
         meta = json.dumps(meta)
-        # take out the ']'
         meta = meta[:-1]
-        completion_field_meta = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
-        # add the field to the existing meta
-        meta += completion_field_meta
-        # reload meta
-        meta=json.loads(meta)
+        meta += ', ' + json_obj + ']'
+        meta = json.loads(meta)
         return meta
+
 
     def construct_form(self, meta, record_set, form_name, record_id,
                        event_num=None, unique_event_names=None,
@@ -76,7 +97,14 @@ class FormBuilderJson(object):
                 return '''
                     <div class="alert alert-danger"><center><span>There was an error retrieving this record from REDCap</span></center></div>
                 '''
-        meta = self.add_completion_field(meta, form_name) # add the completion field to the metadata
+
+        # construct the field name for adding completion status to redcap forms
+        completion_field_name = form_name + "_complete"
+        # add completion field to all redcap forms
+        meta = self.add_field_to_form (meta, field_name=completion_field_name, form_name=form_name,
+            field_type="dropdown", field_label="Form Completion Status", select_choices_or_calculations="0, Incomplete | 1, Unverified | 2, Complete",
+            section_header="Form Status", required_field="y")
+
         form_fields = [
             item for item in meta if item.get("form_name") == form_name
         ]
