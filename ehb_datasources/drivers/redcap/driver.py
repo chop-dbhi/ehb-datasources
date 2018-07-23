@@ -647,7 +647,7 @@ class ehbDriver(Driver, GenericDriver):
 
         def find_completed_forms_longitudinal(self):
             # must specify field study_id for redcap api to return study_id and event name
-            field_names = ['study_id']
+            field_names = [self.record_id_field_name]
             completion_fields = construct_field_names(list(self.form_data.keys()))
             field_names += completion_fields
             temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
@@ -738,7 +738,6 @@ class ehbDriver(Driver, GenericDriver):
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
             count = counter(0)
             rows = [makeRow(form_name, next(count)) for form_name in self.form_names]
-            print (rows)
             form += ''.join(rows) + '</table>'
             return form
         else:
