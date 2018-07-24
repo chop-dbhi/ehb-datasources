@@ -660,13 +660,12 @@ class ehbDriver(Driver, GenericDriver):
                     lambda x,
                     y: x + ' ' + y.capitalize(),
                     form_name.split('_'), '') + '</td>'
-
                 return row + ('<td><button data-toggle="modal"' +
-                      ' data-backdrop="static" data-keyboard="false"' +
-                      ' href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
-                      ' " onclick="location.href=\'' + form_url + key +
-                      '/\'">Edit <i class="fa ' +'{button_icon[1]}' +
-                      '"></i></button></td>').format(button_icon=get_button_icon(key))
+                            ' data-backdrop="static" data-keyboard="false"' +
+                            ' href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
+                            ' " onclick="location.href=\'' + form_url + key +
+                            '/\'">Edit <i class="fa ' +'{button_icon[1]}' +
+                            '"></i></button></td>').format(button_icon=get_button_icon(key))
 
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
