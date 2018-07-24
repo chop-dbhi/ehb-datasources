@@ -316,7 +316,7 @@ def redcap_metadata_xml():
 
 @pytest.fixture(scope='module')
 def redcap_record_json():
-    return b'[{"study_id":"0GUQDBCDE0EAWN9Q:8LAG76CHO","redcap_event_name":"visit_arm_1","date_enrolled":"","ethnicity":"","race":"","sex":"","given_birth":"","num_children":"","demographics_complete":"","specify_mood":"50","meds___1":"1","meds___2":"0","meds___3":"0","meds___4":"0","meds___5":"0","height":"100","weight":"20","comments":"Test Data2","prealb_b":"19","creat_b":"0.6","chol_b":"101","transferrin_b":"102","ibd_flag":"1","general_ibd":"2016-08-31","chrons":"2016-08-31","ulcerative_colitis":"2016-08-31","colonoscopy":"0","colonoscopy_date":"2016-08-31","meal_date":"2016-08-31","baseline_visit_data_complete":"0","meal_description":"","types_of_food":"","healthy":"","meal_description_form_complete":""},{"study_id":"0GUQDBCDE0EAWN9Q:8LAG76CHO","redcap_event_name":"breakfast_at_visit_arm_1","date_enrolled":"","ethnicity":"","race":"","sex":"","given_birth":"","num_children":"","demographics_complete":"","specify_mood":"","meds___1":"","meds___2":"","meds___3":"","meds___4":"","meds___5":"","height":"","weight":"","comments":"","prealb_b":"","creat_b":"","chol_b":"","transferrin_b":"","ibd_flag":"","general_ibd":"","chrons":"","ulcerative_colitis":"","colonoscopy":"","colonoscopy_date":"","meal_date":"","baseline_visit_data_complete":"","meal_description":"1","types_of_food":"2","healthy":"1","meal_description_form_complete":"2"},{"study_id":"0GUQDBCDE0EAWN9Q:8LAG76CHO","redcap_event_name":"lunch_at_visit_arm_1","date_enrolled":"","ethnicity":"","race":"","sex":"","given_birth":"","num_children":"","demographics_complete":"","specify_mood":"","meds___1":"","meds___2":"","meds___3":"","meds___4":"","meds___5":"","height":"","weight":"","comments":"","prealb_b":"","creat_b":"","chol_b":"","transferrin_b":"","ibd_flag":"","general_ibd":"","chrons":"","ulcerative_colitis":"","colonoscopy":"","colonoscopy_date":"","meal_date":"","baseline_visit_data_complete":"","meal_description":"3","types_of_food":"2","healthy":"3","meal_description_form_complete":"0"}]'
+    return b'[{"study_id":"0GUQDBCDE0EAWN9Q:8LAG76CHO","redcap_event_name":"visit_arm_1","date_enrolled":"","ethnicity":"","race":"","sex":"","given_birth":"","num_children":"","demographics_complete":"","specify_mood":"50","meds___1":"1","meds___2":"0","meds___3":"0","meds___4":"0","meds___5":"0","height":"100","weight":"20","comments":"Test Data2","prealb_b":"19","creat_b":"0.6","chol_b":"101","transferrin_b":"102","ibd_flag":"1","general_ibd":"2016-08-31","chrons":"2016-08-31","ulcerative_colitis":"2016-08-31","colonoscopy":"0","colonoscopy_date":"2016-08-31","meal_date":"2016-08-31","baseline_visit_data_complete":"0","meal_description":"","types_of_food":"","healthy":"","meal_description_form_complete":""},{"study_id":"0GUQDBCDE0EAWN9Q:8LAG76CHO","redcap_event_name":"breakfast_at_visit_arm_1","date_enrolled":"","ethnicity":"","race":"","sex":"","given_birth":"","num_children":"","demographics_complete":"","specify_mood":"","meds___1":"","meds___2":"","meds___3":"","meds___4":"","meds___5":"","height":"","weight":"","comments":"","prealb_b":"","creat_b":"","chol_b":"","transferrin_b":"","ibd_flag":"","general_ibd":"","chrons":"","ulcerative_colitis":"","colonoscopy":"","colonoscopy_date":"","meal_date":"","baseline_visit_data_complete":"","meal_description":"1","types_of_food":"2","healthy":"1","meal_description_form_complete":"0"},{"study_id":"0GUQDBCDE0EAWN9Q:8LAG76CHO","redcap_event_name":"lunch_at_visit_arm_1","date_enrolled":"","ethnicity":"","race":"","sex":"","given_birth":"","num_children":"","demographics_complete":"","specify_mood":"","meds___1":"","meds___2":"","meds___3":"","meds___4":"","meds___5":"","height":"","weight":"","comments":"","prealb_b":"","creat_b":"","chol_b":"","transferrin_b":"","ibd_flag":"","general_ibd":"","chrons":"","ulcerative_colitis":"","colonoscopy":"","colonoscopy_date":"","meal_date":"","baseline_visit_data_complete":"","meal_description":"3","types_of_food":"2","healthy":"3","meal_description_form_complete":"0"}]'
 
 
 @pytest.fixture(scope='module')
@@ -383,15 +383,6 @@ def driver_configuration_nonlong():
         "form_names": ["demographics", "baseline_data"],
         "record_id_field_name": "study_id"
     }'''
-
-@pytest.fixture(scope='module')
-def driver_configuration_nonlong2():
-    return u'''
-    {
-        "form_names": ["demographics", "meal_description_form"],
-        "record_id_field_name": "study_id"
-    }'''
-
 
 @pytest.fixture(scope='module')
 def redcap_form_datastring():
