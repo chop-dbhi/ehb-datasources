@@ -50,7 +50,6 @@ class FormBuilderJson(object):
         meta.append(new_field)
         return meta
 
-
     def construct_form(self, meta, record_set, form_name, record_id,
                        event_num=None, unique_event_names=None,
                        event_labels=None, session=None, record_id_field=None):
