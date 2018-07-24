@@ -8,8 +8,6 @@ import xml.dom.minidom as xml
 from xml.parsers.expat import ExpatError
 from collections import OrderedDict
 from jinja2 import Template
-import http.client
-import time
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
     ImproperArguments, ServerError
