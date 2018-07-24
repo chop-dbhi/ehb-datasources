@@ -384,6 +384,7 @@ def driver_configuration_nonlong():
         "record_id_field_name": "study_id"
     }'''
 
+
 @pytest.fixture(scope='module')
 def redcap_form_datastring():
     return b'meds___1=1&height=100&weight=20&comments=Test%20Data&prealb_b=19&creat_b=0.6&chol_b=101&transferrin_b=102&ibd_flag=1&general_ibd=2016-08-31&chrons=2016-08-31&ulcerative_colitis=2016-08-31&colonoscopy=0&colonoscopy_date=2016-08-31&meal_date=2016-08-31&'
