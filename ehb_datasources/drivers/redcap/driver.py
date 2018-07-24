@@ -608,7 +608,7 @@ class ehbDriver(Driver, GenericDriver):
 
 
     # new function to find and display redcap form status
-    def find_completed_forms(self, record_id, form_url='', *args, **kwargs):
+    def find_completed_forms(self, record_id):
 
         def construct_field_names(list_of_forms):
             form_completion_fields=[]
