@@ -806,40 +806,7 @@ def test_srsf_redcap_completion_codes(mocker, driver, driver_configuration_long,
     redcap_form_complete_codes[(str(1)+"_"+str(3))] = 2
     redcap_form_complete_codes[(str(0)+"_"+str(0))] = 1
     form = driver.subRecordSelectionForm(form_url='/test/', redcap_form_complete_codes=redcap_form_complete_codes)
-    assert 'btn btnsmall btn-success' in form
-    assert 'btn btnsmall btn-warning' in form
-
-def test_find_redcap_completed_forms_long(mocker, driver, driver_configuration_long, redcap_metadata_json, redcap_record_json):
-    # Mocks
-    # Metadata request
-    driver.meta = mocker.MagicMock(return_value=redcap_metadata_json)
-    driver.configure(driver_configuration_long)
-    # Record Request
-    MockREDCapResponse = mocker.MagicMock(
-        spec=HTTPResponse,
-        status=200)
-    MockREDCapResponse.read = mocker.MagicMock(return_value=redcap_record_json)
-    driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
-
-    form_status = driver.find_completed_forms('0GUQDBCDE0EAWN9Q:8LAG76CHO', '/test/')
-    form_status_items = form_status.items()
-    test = ((str(1)+'_'+str(1)), 2)
-    assert test in form_status_items
-
-
-def test_find_redcap_completed_forms_nonlong(mocker, driver, driver_configuration_nonlong2, redcap_metadata_json, redcap_record_json):
-    # Mocks
-    # Metadata request
-    driver.meta = mocker.MagicMock(return_value=redcap_metadata_json)
-    driver.configure(driver_configuration_nonlong2)
-    # Record Request
-    MockREDCapResponse = mocker.MagicMock(
-        spec=HTTPResponse,
-        status=200)
-    MockREDCapResponse.read = mocker.MagicMock(return_value=redcap_record_json)
-    driver.POST = mocker.MagicMock(return_value=MockREDCapResponse)
-
-    form_status = driver.find_completed_forms('0GUQDBCDE0EAWN9Q:8LAG76CHO', '/test/')
-    form_status_items = form_status.items()
-    test = ('1', 2)
-    assert test in form_status_items
+    assert 'btn-success' in form
+    assert 'fa-circle' in form
+    assert 'btn-warning' in form
+    assert 'fa-adjust' in form
