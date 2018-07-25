@@ -654,17 +654,13 @@ class ehbDriver(Driver, GenericDriver):
             # The project is not longitudinal
             def makeRow(form_name, form_index):
                 key = str(form_index)
-                row = '<tr><td>' + reduce(
-                    lambda x,
-                    y: x + ' ' + y.capitalize(),
-                    form_name.split('_'), '') + '</td>'
+                row = '<tr><td>' + " ".join([fn.capitalize() for fn in form_name.split('_')]) + '</td>'
                 return row + ('<td><button data-toggle="modal"' +
                             ' data-backdrop="static" data-keyboard="false"' +
                             ' href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
                             ' " onclick="location.href=\'' + form_url + key +
                             '/\'">Edit <i class="fa ' +'{button_icon[1]}' +
                             '"></i></button></td>').format(button_icon=get_button_icon(key))
-
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
             count = counter(0)
@@ -688,23 +684,15 @@ class ehbDriver(Driver, GenericDriver):
             def make_trs(form_index, form_list):
                 count = counter(0)
                 if len(form_list) > 1:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        form_list[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(form_index, next(count), y),
-                        self.form_data[form_list[0]],
-                        '') + '</tr>' + make_trs(form_index + 1, form_list[1: len(form_list)]) # reduces number of forms in list after its been processed
+                    form_name_cell = '<tr><td>' + " ".join([fn.capitalize() for fn in form_list[0].split('_')]) + '</td>'
+                    edit_button_cells = reduce( lambda x,y: x + make_td(form_index, next(count), y),
+                                        self.form_data[form_list[0]], '') + '</tr>'
+                    return form_name_cell + edit_button_cells + make_trs(form_index + 1, form_list[1: len(form_list)])
                 else:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        form_list[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(form_index, next(count), y),
-                        self.form_data[form_list[0]],
-                        '')
+                    form_name_cell = '<tr><td>' + " ".join([fn.capitalize() for fn in form_list[0].split('_')]) + '</td>'
+                    edit_button_cells = reduce( lambda x,y: x + make_td(form_index, next(count), y),
+                                        self.form_data[form_list[0]], '')
+                    return form_name_cell + edit_button_cells
             number_of_events = str(len(self.event_labels))
             form = ('<table class="table table-bordered table-striped' +
                     'table-condensed"><tr><th rowspan="2">' +
