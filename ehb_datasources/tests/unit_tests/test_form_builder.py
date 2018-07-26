@@ -20,6 +20,7 @@ def test_construct_form(form_builder, redcap_metadata_json, redcap_record_json):
     assert '<input type="text" value="100" name="height" class="field_input" id="input_height"  />' in form
     assert '<input type="text" value="20" name="weight" class="field_input" id="input_weight"  />' in form
     assert '<textarea rows="5" cols="20" name="comments" class="field_input" >Test Data2</textarea>' in form
+    assert 'Form Completion Status' in form
 
 def test_construct_form2_branch_logic_functions(form_builder, redcap_metadata_json2, redcap_record_json2):
     form = form_builder.construct_form(
@@ -84,3 +85,9 @@ def test_construct_form_bad_redcap_record(form_builder, redcap_metadata_json2):
         'study_id'
     )
     assert 'There was an error retrieving this record from REDCap' in form
+
+def test_add_new_field_to_form(form_builder, redcap_metadata_json):
+    metadata_json = json.loads(redcap_metadata_json.decode('utf-8'))
+    new_field = form_builder.add_new_field_to_form(metadata_json, field_name="test_new_field")
+    last_index = len(new_field)-1
+    assert 'test_new_field' in new_field[last_index]['field_name']

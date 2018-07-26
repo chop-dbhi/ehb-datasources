@@ -8,8 +8,6 @@ import xml.dom.minidom as xml
 from xml.parsers.expat import ExpatError
 from collections import OrderedDict
 from jinja2 import Template
-import http.client
-import time
 
 from ehb_datasources.drivers.exceptions import PageNotFound,\
     ImproperArguments, ServerError
@@ -606,7 +604,8 @@ class ehbDriver(Driver, GenericDriver):
             self.form_event_data = kwargs.pop('form_event_data', None)
             self.form_names = kwargs.pop('form_names', None)
 
-    def subRecordSelectionForm(self, record_id, form_url='', *args, **kwargs):
+
+    def subRecordSelectionForm(self, form_url='', redcap_form_complete_codes={}, *args, **kwargs):
 
         '''
         Generates the REDCap data entry table.
@@ -632,115 +631,68 @@ class ehbDriver(Driver, GenericDriver):
                 yield start
                 start += 1
 
-        all_form_status = {}    # dictionary to hold all forms, and their corresponding status
-                                # Key: Str(Form_spec), Value: Int(Completion_status)
-
-        # new function to find and display form status
-        # to users through coded colors.
-        # Incomplete (0) displays red
-        # Unverified (1) displays yellow
-        # Complete (2) displays green
-        def find_completed_forms_nonlongitudinal(self):
-            for fn in self.form_names:
-                record_set = self.get(_format=self.FORMAT_JSON,
-                                      records=[record_id],
-                                      rawResponse=True,
-                                      forms=self.form_names).read().strip()
-                record_set = self.raw_to_json(record_set)
-                fn_complete = fn + "_complete"
-                # key is the form spec according to driver config
-                key = str(self.form_names.index(fn))
-
-                # iterate through the record set to find the completion field
-                for r in record_set:
-                    # form is incomplete
-                    if (r[fn_complete] == '0'):
-                        # append the form and value to all_form_status
-                        all_form_status[key] = 0
-                    # form is unverified
-                    elif (r[fn_complete] == '1'):
-                        all_form_status[key] = 1
-                    # form is complete
-                    elif (r[fn_complete] == '2'):
-                        all_form_status[key] = 2
-            return
-
-        def find_completed_forms_longitudinal(self):
-            # going through variables in configure to find events and forms
-            # used in the table rows for longitudinal studies
-
-            # must specify field study_id for redcap api to return
-            # study_id and event name
-            field_names = ['study_id']
-
-            used_forms = list(self.form_data.keys())
-            form_complete_field_names=[]
-
-            for form in used_forms:
-                form_complete_field_names.append(form + "_complete")
-                field_names.append(form + "_complete")
-
-            temp = self.get(_format=self.FORMAT_JSON, rawResponse=True,
-                        records=[record_id], fields=field_names)
-            record_set = temp.read().strip()
-            record_set = self.raw_to_json(record_set)
-            record_set = json.dumps(record_set) # have to reload json in order for the field
-            record_set = json.loads(record_set) # redcap_event_name to be read
-
-            for r in record_set:
-                redcap_eventname = r['redcap_event_name']
-                if redcap_eventname in self.unique_event_names:
-                    event_index = self.unique_event_names.index(redcap_eventname)
-
-                    for f in form_complete_field_names:
-                        form_complete_value = r[f]
-                        form_name = f[:-9]
-                        # key to match the spec for the table
-                        key = str(list(self.form_data.keys()).index(form_name)) + "_" + str(event_index)
-                        if form_complete_value == '0':
-                            all_form_status[key] = 0
-                        elif form_complete_value == '1':
-                            all_form_status[key] = 1
-                        elif form_complete_value == '2':
-                            all_form_status[key] = 2
-
-            return
-
+        # method to identify button color and icon
+        # based on form completion status
+        def get_button_icon(key):
+            all_form_status = redcap_form_complete_codes
+            button_icon=[]
+            try:
+                if all_form_status[key] == 1: # form is unverified
+                    button_icon.append('btn-warning')
+                    button_icon.append('fa-adjust')
+                    return button_icon
+                elif all_form_status[key] == 2: # form is complete
+                    button_icon.append('btn-success')
+                    button_icon.append('fa-circle')
+                    return button_icon
+            except: # form is incomplete
+                button_icon.append('btn-primary')
+                button_icon.append('fa-circle-o')
+                return button_icon
 
         if self.form_names:
             # The project is not longitudinal
-            find_completed_forms_nonlongitudinal(self)
-            def makeRow(fn, i):
-                key = str(i)
-                row = '<tr><td>' + reduce(
-                    lambda x,
-                    y: x + ' ' + y.capitalize(),
-                    fn.split('_'), '') + '</td>'
-
-                first_string = ('<td><button data-toggle="modal"' +
-                              ' data-backdrop="static" data-keyboard="false"' +
-                              ' href="#pleaseWaitModal"' )
-                second_string = (' onclick="location.href=\'' +
-                                form_url + str(i) + '/\'">Edit</button></td>')
-
-                # incomplete forms display blue button
-                if all_form_status[key] == 0:
-                    return row + (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
-                # unverified forms display yellow button
-                elif all_form_status[key] == 1:
-                    return row + (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                # complete forms display green button
-                elif all_form_status[key] ==2:
-                    return row + (first_string + 'class="btn btnsmall btn-success"' + second_string)
-
+            def makeRow(form_name, form_index):
+                key = str(form_index)
+                row = '<tr><td>' + " ".join([fn.capitalize() for fn in form_name.split('_')]) + '</td>'
+                return row + ('<td><button data-toggle="modal"' +
+                            ' data-backdrop="static" data-keyboard="false"' +
+                            ' href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
+                            ' " onclick="location.href=\'' + form_url + key +
+                            '/\'">Edit <i class="fa ' +'{button_icon[1]}' +
+                            '"></i></button></td>').format(button_icon=get_button_icon(key))
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
             count = counter(0)
-            rows = [makeRow(fn, next(count)) for fn in self.form_names]
+            rows = [makeRow(form_name, next(count)) for form_name in self.form_names]
             form += ''.join(rows) + '</table>'
             return form
         else:
             # The project is longitudinal
+            def make_td(form_index, event_index, form_exists):
+                key = str(form_index) + "_" + str(event_index)
+                if form_exists:
+                    return ('<td><button data-toggle="modal"' +
+                            'data-backdrop="static" data-keyboard="false" ' +
+                            'href="#pleaseWaitModal" class="btn btn-small ' +
+                            '{button_icon[0]}' + '" onclick="location.href=\'' +
+                            form_url + key + '/\'">Edit <i class="fa ' +
+                            '{button_icon[1]}' + '"></i></button></td>').format(button_icon=get_button_icon(key))
+                else:
+                    return '<td></td>'
+
+            def make_trs(form_index, form_list):
+                count = counter(0)
+                if len(form_list) > 1:
+                    form_name_cell = '<tr><td>' + " ".join([fn.capitalize() for fn in form_list[0].split('_')]) + '</td>'
+                    edit_button_cells = reduce( lambda x,y: x + make_td(form_index, next(count), y),
+                                        self.form_data[form_list[0]], '') + '</tr>'
+                    return form_name_cell + edit_button_cells + make_trs(form_index + 1, form_list[1: len(form_list)])
+                else:
+                    form_name_cell = '<tr><td>' + " ".join([fn.capitalize() for fn in form_list[0].split('_')]) + '</td>'
+                    edit_button_cells = reduce( lambda x,y: x + make_td(form_index, next(count), y),
+                                        self.form_data[form_list[0]], '')
+                    return form_name_cell + edit_button_cells
             number_of_events = str(len(self.event_labels))
             form = ('<table class="table table-bordered table-striped' +
                     'table-condensed"><tr><th rowspan="2">' +
@@ -751,52 +703,6 @@ class ehbDriver(Driver, GenericDriver):
                 y: x + '<td>' + y + '</td>',
                 self.event_labels,
                 '') + '</tr>'
-
-            find_completed_forms_longitudinal(self)
-
-            def make_td(i, j, l):
-                first_string = '<td><button data-toggle="modal"' + 'data-backdrop="static" data-keyboard="false" ' + 'href="#pleaseWaitModal"'
-
-                second_string = 'onclick="location.href=\'' + form_url + str(i) + '_' + str(j) + '/\'">Edit</button></td>'
-                key = str(i) + "_" + str(j)
-
-                if l:
-                    try:
-                        # incomplete forms display blue button
-                        if all_form_status[key] == 0:
-                            return (first_string + 'class="btn btnsmall + btn-primary"' + second_string)
-                        # unverified forms display yellow button
-                        elif all_form_status[key] == 1:
-                            return (first_string + 'class="btn btnsmall btn-warning"' + second_string)
-                        # complete forms display green button
-                        elif all_form_status[key] ==2:
-                            return (first_string + 'class="btn btnsmall btn-success"' + second_string)
-                    except:
-                        return (first_string + 'class="btn btnsmall btn-primary"' + second_string)
-                else:
-                    return '<td></td>'
-
-            def make_trs(i, l):
-                count = counter(0)
-                if len(l) > 1:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
-                        '') + '</tr>' + make_trs(i + 1, l[1: len(l)])
-                else:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
-                        '')
-
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
 
@@ -882,12 +788,11 @@ class ehbDriver(Driver, GenericDriver):
                                                record_set,
                                                form_name,
                                                er.record_id,
-                                               self.form_data_ordered,
                                                None,
                                                None,
                                                None,
                                                session,
-                                               self.record_id_field_name) #added form data ordered
+                                               self.record_id_field_name)
         else:
             temp = self.get(_format=self.FORMAT_JSON,
                             rawResponse=True,
@@ -898,12 +803,11 @@ class ehbDriver(Driver, GenericDriver):
                                                record_set,
                                                form_name,
                                                er.record_id,
-                                               self.form_data_ordered,
                                                event_num,
                                                self.unique_event_names,
                                                self.event_labels,
                                                session,
-                                               self.record_id_field_name) #added form data ordered
+                                               self.record_id_field_name)
 
     def __getCDATA(self, item, tag_name, default=None):
             CDATA = item.getElementsByTagName(tag_name)
@@ -933,7 +837,7 @@ class ehbDriver(Driver, GenericDriver):
         (0 indexed) and M is the event number (0 indexed). The form and event
         numbers are mapped to form names and event names in the order they were
         provided the call to configure
-        
+
         Optional Inputs
         * session = the session var. If provided the driver will use the
         session var to cache form field names which improves performance'''

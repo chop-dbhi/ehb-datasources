@@ -20,7 +20,37 @@ class redcapTemplate(Template):
 
 class FormBuilderJson(object):
 
-    def construct_form(self, meta, record_set, form_name, record_id, form_data_ordered,
+    # this method can be used to add a field not already defined in meta data to all forms
+    def add_new_field_to_form (self, meta, field_name="", form_name="", field_type="", field_label="", select_choices_or_calculations="",
+        section_header="", field_note="", text_validation_type_or_show_slider_number="",
+        text_validation_min="",text_validation_max="",identifier="", branching_logic="",
+        required_field="", custom_alignment="", question_number="", matrix_group_name="",
+        matrix_ranking="", field_annotation=""):
+        new_field = {}
+        new_field["field_name"] = field_name
+        new_field["form_name"] = form_name
+        new_field["section_header"] = section_header
+        new_field["field_type"] = field_type
+        new_field ["field_label"] = field_label
+        new_field["select_choices_or_calculations"]= select_choices_or_calculations
+        new_field["field_note"] = field_note
+        new_field["text_validation_type_or_show_slider_number"] = text_validation_type_or_show_slider_number
+        new_field["text_validation_min"] = text_validation_min
+        new_field["text_validation_max"] = text_validation_max
+        new_field["identifier"] = identifier
+        new_field["branching_logic"] = branching_logic
+        new_field["required_field"] = required_field
+        new_field["custom_alignment"] = custom_alignment
+        new_field["question_number"] = question_number
+        new_field["matrix_group_name"] = matrix_group_name
+        new_field["matrix_ranking"]= matrix_ranking
+        new_field["field_annotation"] = field_annotation
+        new_field = json.dumps (new_field)
+        new_field = json.loads(new_field)
+        meta.append(new_field)
+        return meta
+
+    def construct_form(self, meta, record_set, form_name, record_id,
                        event_num=None, unique_event_names=None,
                        event_labels=None, session=None, record_id_field=None):
         '''
@@ -65,30 +95,18 @@ class FormBuilderJson(object):
                     <div class="alert alert-danger"><center><span>There was an error retrieving this record from REDCap</span></center></div>
                 '''
 
-        ################################################
-        ####  this is to add form field completion to meta
-        ################################################
-
-        # meta to string
-        meta = json.dumps(meta)
-        # take out the ']'
-        meta = meta[:-1]
-        completion_field_meta = ', {"field_name": "' + form_name + '_complete", "form_name": "' + form_name + '", "section_header": "Form Status", "field_type": "dropdown", "field_label": "Form Completion Status", "select_choices_or_calculations": "0, Incomplete | 1, Unverified | 2, Complete", "field_note": "", "text_validation_type_or_show_slider_number": "", "text_validation_min": "", "text_validation_max": "", "identifier": "", "branching_logic": "", "required_field": "y", "custom_alignment": "", "question_number": "", "matrix_group_name": "", "matrix_ranking": "", "field_annotation": ""}]'
-        # add the field to the existing meta
-        meta += completion_field_meta
-
-        # reload meta
-        meta=json.loads(meta)
-
-        ################################################
-        ####  resume normal code
-        ################################################
+        # construct the field name for adding completion status to redcap forms
+        completion_field_name = form_name + "_complete"
+        # add completion field to all redcap forms
+        meta = self.add_new_field_to_form (meta, field_name=completion_field_name, form_name=form_name,
+            field_type="dropdown", field_label="Form Completion Status", select_choices_or_calculations="0, Incomplete | 1, Unverified | 2, Complete",
+            section_header="Form Status", required_field="y")
 
         form_fields = [
             item for item in meta if item.get("form_name") == form_name
         ]
         self.form_fields = form_fields
-        # Remove identifiers from form &
+        # Remove identifiers from form
         for field in self.form_fields:
             if field['field_name'] == self.record_id_field:
                 self.form_fields.remove(field)
