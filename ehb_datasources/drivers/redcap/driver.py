@@ -604,7 +604,9 @@ class ehbDriver(Driver, GenericDriver):
             self.form_event_data = kwargs.pop('form_event_data', None)
             self.form_names = kwargs.pop('form_names', None)
 
-    def subRecordSelectionForm(self, form_url='', *args, **kwargs):
+
+    def subRecordSelectionForm(self, form_url='', redcap_form_complete_codes={}, *args, **kwargs):
+
         '''
         Generates the REDCap data entry table.
 
@@ -629,27 +631,68 @@ class ehbDriver(Driver, GenericDriver):
                 yield start
                 start += 1
 
+        # method to identify button color and icon
+        # based on form completion status
+        def get_button_icon(key):
+            all_form_status = redcap_form_complete_codes
+            button_icon=[]
+            try:
+                if all_form_status[key] == 1: # form is unverified
+                    button_icon.append('btn-warning')
+                    button_icon.append('fa-adjust')
+                    return button_icon
+                elif all_form_status[key] == 2: # form is complete
+                    button_icon.append('btn-success')
+                    button_icon.append('fa-circle')
+                    return button_icon
+            except: # form is incomplete
+                button_icon.append('btn-primary')
+                button_icon.append('fa-circle-o')
+                return button_icon
+
         if self.form_names:
             # The project is not longitudinal
-            def makeRow(fn, i):
-                row = '<tr><td>' + reduce(
-                    lambda x,
-                    y: x + ' ' + y.capitalize(),
-                    fn.split('_'), '') + '</td>'
+            def makeRow(form_name, form_index):
+                key = str(form_index)
+                row = '<tr><td>' + " ".join([fn.capitalize() for fn in form_name.split('_')]) + '</td>'
                 return row + ('<td><button data-toggle="modal"' +
-                              ' data-backdrop="static" data-keyboard="false"' +
-                              ' href="#pleaseWaitModal" class="btn btn-small' +
-                              ' btn-primary" onclick="location.href=\'' +
-                              form_url + str(i) + '/\'">Edit</button></td>')
-
+                            ' data-backdrop="static" data-keyboard="false"' +
+                            ' href="#pleaseWaitModal" class="btn btn-small ' + '{button_icon[0]}'
+                            ' " onclick="location.href=\'' + form_url + key +
+                            '/\'">Edit <i class="fa ' +'{button_icon[1]}' +
+                            '"></i></button></td>').format(button_icon=get_button_icon(key))
             form = ('<table class="table table-bordered table-striped ' +
                     'table-condensed"><tr><th>Data Form</th><th></th></tr>')
             count = counter(0)
-            rows = [makeRow(fn, next(count)) for fn in self.form_names]
+            rows = [makeRow(form_name, next(count)) for form_name in self.form_names]
             form += ''.join(rows) + '</table>'
             return form
         else:
             # The project is longitudinal
+            def make_td(form_index, event_index, form_exists):
+                key = str(form_index) + "_" + str(event_index)
+                if form_exists:
+                    return ('<td><button data-toggle="modal"' +
+                            'data-backdrop="static" data-keyboard="false" ' +
+                            'href="#pleaseWaitModal" class="btn btn-small ' +
+                            '{button_icon[0]}' + '" onclick="location.href=\'' +
+                            form_url + key + '/\'">Edit <i class="fa ' +
+                            '{button_icon[1]}' + '"></i></button></td>').format(button_icon=get_button_icon(key))
+                else:
+                    return '<td></td>'
+
+            def make_trs(form_index, form_list):
+                count = counter(0)
+                if len(form_list) > 1:
+                    form_name_cell = '<tr><td>' + " ".join([fn.capitalize() for fn in form_list[0].split('_')]) + '</td>'
+                    edit_button_cells = reduce( lambda x,y: x + make_td(form_index, next(count), y),
+                                        self.form_data[form_list[0]], '') + '</tr>'
+                    return form_name_cell + edit_button_cells + make_trs(form_index + 1, form_list[1: len(form_list)])
+                else:
+                    form_name_cell = '<tr><td>' + " ".join([fn.capitalize() for fn in form_list[0].split('_')]) + '</td>'
+                    edit_button_cells = reduce( lambda x,y: x + make_td(form_index, next(count), y),
+                                        self.form_data[form_list[0]], '')
+                    return form_name_cell + edit_button_cells
             number_of_events = str(len(self.event_labels))
             form = ('<table class="table table-bordered table-striped' +
                     'table-condensed"><tr><th rowspan="2">' +
@@ -660,39 +703,6 @@ class ehbDriver(Driver, GenericDriver):
                 y: x + '<td>' + y + '</td>',
                 self.event_labels,
                 '') + '</tr>'
-
-            def make_td(i, j, l):
-                if l:
-                    return ('<td><button data-toggle="modal"' +
-                            'data-backdrop="static" data-keyboard="false" ' +
-                            'href="#pleaseWaitModal" class="btn btn-small ' +
-                            'btn-primary" onclick="location.href=\'' +
-                            form_url +
-                            str(i) + '_' + str(j) + '/\'">Edit</button></td>')
-                else:
-                    return '<td></td>'
-
-            def make_trs(i, l):
-                count = counter(0)
-                if len(l) > 1:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
-                        '') + '</tr>' + make_trs(i + 1, l[1: len(l)])
-                else:
-                    return '<tr><td>' + reduce(
-                        lambda x,
-                        y: x + ' ' + y.capitalize(),
-                        l[0].split('_'), '') + '</td>' + reduce(
-                        lambda x,
-                        y: x + make_td(i, next(count), y),
-                        self.form_data[l[0]],
-                        '')
-
             form += make_trs(0, self.form_data_ordered) + '</table>'
             return form
 
@@ -712,7 +722,6 @@ class ehbDriver(Driver, GenericDriver):
 
         The form and event numbers are mapped to form names and event names in
         the order they were provided in the call to configure
-
         If the REDCap project is not longitudinal (i.e. Survey or Data Forms
         Classic) the event number is not required and will be ignored if
         included
