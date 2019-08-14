@@ -116,7 +116,7 @@ class FormBuilderJson(object):
 <script type="text/javascript">
 
     $(function() {
-    $('.date-field .input-group.date').datetimepicker({
+    $('#date-field').datetimepicker({
     format: 'YYYY-MM-DD',
     showTodayButton: true,
     showClear: true,
@@ -124,39 +124,27 @@ class FormBuilderJson(object):
             today: 'todayText'
         },
     widgetPositioning:{
-        horizontal: 'right',
         vertical: 'bottom'
-    }
-    }).on('dp.change', function(ev){
-      var textid = $(this).children('input').attr('id');
-      var datespanid = textid.replace('dateinput_', 'datespan_');
-      var datespanEl = $('#' + datespanid)[0];
-      datespanEl.innerHTML = "";
-    });
+            }
+            })
     });
 
     $(function() {
-      $('.time-field .input-group.time').datetimepicker({
+      $('#time-field').datetimepicker({
       format: 'HH:mm',
-      showClear: true,
       showTodayButton: true,
+      showClear: true,
       icons: {
               today: 'nowText'
           },
       widgetPositioning:{
-              horizontal: 'right',
               vertical: 'bottom'
           }
-      }).on('dp.change', function(ev){
-        var textid = $(this).children('input').attr('id');
-        var timespanid = textid.replace('timeinput_', 'timespan_');
-        var timespanEl = $('#' + timespanid)[0];
-        timespanEl.innerHTML = "";
-        });
+      })
     });
 
     $(function() {
-      $('.datetime-field .input-group.datetime').datetimepicker({
+      $('#datetime-field').datetimepicker({
       format: 'YYYY-MM-DD HH:mm',
       showTodayButton: true,
       showClear: true,
@@ -164,15 +152,9 @@ class FormBuilderJson(object):
               today: 'todayText'
           },
       widgetPositioning:{
-              horizontal: 'right',
               vertical: 'bottom'
           }
-      }).on('dp.change', function(ev){
-        var textid = $(this).children('input').attr('id');
-        var datetimespanid = textid.replace('datetimeinput_', 'datetimespan_');
-        var datetimespanEl = $('#' + datetimespanid)[0];
-        datespanEl.innerHTML = "";
-    });
+      })
     });
 
   var cascaded_branch_functions = [];
@@ -347,6 +329,7 @@ class FormBuilderJson(object):
 
 </script>
 
+
 ^form_header
 
 <table class="table table-bordered table-striped table-condensed">^table_rows</table>""")
@@ -471,9 +454,8 @@ class FormBuilderJson(object):
                 return """<div class="date-field">
                             <div class='col-sm-6'>
                                 <div class="form-group">
-                                    <div class='input-group date' id='datetimepicker2'>
+                                    <div class='input-group date' id='date-field'>
                                         <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
-    \
                                         <span class="input-group-addon">
                                             <span class="glyphicon glyphicon-calendar"></span>
                                         </span>
@@ -487,9 +469,8 @@ class FormBuilderJson(object):
                 return """<div class="time-field">
                             <div class='col-sm-6'>
                                 <div class="form-group">
-                                    <div class='input-group time' id='datetimepicker3'>
+                                    <div class='input-group date' id='time-field'>
                                         <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
-    \
                                         <span class="input-group-addon">
                                             <span class="glyphicon glyphicon-time"></span>
                                         </span>
@@ -503,9 +484,8 @@ class FormBuilderJson(object):
                 return """<div class="datetime-field">
                             <div class='col-sm-6'>
                                 <div class="form-group">
-                                    <div class='input-group datetime' id='datetimepicker4'>
+                                    <div class='input-group date' id='datetime-field'>
                                         <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
-    \
                                         <span class="input-group-addon">
                                             <span class="glyphicon glyphicon-calendar"></span>
                                         </span>
