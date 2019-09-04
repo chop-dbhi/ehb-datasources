@@ -115,112 +115,47 @@ class FormBuilderJson(object):
         html = redcapTemplate("""
 <script type="text/javascript">
 
-  $(function() {
-    $('.date-field .input-group.date').datepicker({
-      format: 'yyyy-mm-dd',
-      showOnFocus: false,
-      autoclose: true,
-    }).on('changeDate', function(ev){
-        // and clear out any existing warnings:
-        var textid = $(this).children('input').attr('id');
-        var datespanid = textid.replace('dateinput_', 'datespan_');
-        var datespanEl = $('#' + datespanid)[0];
-        datespanEl.innerHTML = "";
+    $(function() {
+    $('#date-field').datetimepicker({
+    format: 'YYYY-MM-DD',
+    showTodayButton: true,
+    showClear: true,
+    icons: {
+            today: 'todayText'
+        },
+    widgetPositioning:{
+        vertical: 'bottom'
+            }
+            })
     });
-  });
 
-  $(function () {
-    $(".todaybutton").on('click', function () {
-        var btnid = $(this).attr('id');
-        var textid = btnid.replace('datebtn_', 'dateinput_');
-        var textField = $('#' + textid)[0];
-
-        var today = new Date();
-        var monthstr = today.getMonth() + 1;
-        if (monthstr < 10) {
-            monthstr = '0' + monthstr;
-        }
-        var datestr = today.getDate();
-        if (datestr < 10) {
-            datestr = '0' + datestr;
-        }
-        var todaystr = today.getFullYear() + "-" + monthstr + "-" + datestr;
-        textField.value = todaystr;
-
-        // and clear out any existing warnings:
-        var datespanid = btnid.replace('datebtn_', 'datespan_');
-        var datespanEl = $('#' + datespanid)[0];
-        datespanEl.innerHTML = "";
+    $(function() {
+      $('#time-field').datetimepicker({
+      format: 'HH:mm',
+      showTodayButton: true,
+      showClear: true,
+      icons: {
+              today: 'nowText'
+          },
+      widgetPositioning:{
+              vertical: 'bottom'
+          }
+      })
     });
-  });
 
-  $(function () {
-    $(".date-field > .input-group > input").on('blur', function (e) {
-      $('.date-field .input-group.date').datepicker('hide');
-      // valiDate() function:
-      var parts, day, month, year;
-      var dateField = e.target;
-      var dateStr = dateField.value;
-
-      // clear out any existing warnings:
-      var textid = $(this).attr('id');
-      var datespanid = textid.replace('dateinput_', 'datespan_');
-      var datespanEl = document.getElementById(datespanid);
-      datespanEl.innerHTML = "";
-
-      if (dateStr == "") {
-          return true;
-      }
-
-      // Part 1: check for the expected format without validating the #s:
-      if(!/^^\d{4}\-\d{1,2}\-\d{1,2}$/.test(dateStr)) {
-         // format is not as expected, but is it a variation we can auto-fix?
-         if(/^^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
-             // date-delimiter '/' used instead of '-', auto-fix:
-             dateStr = dateStr.replace(/\//g, '-');
-             dateField.value = dateStr;
-         }
-         else if (/^^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/.test(dateStr)){
-             // MM[-/]DD[-/]YYYY possibly used instead, auto-fix:
-             parts   = dateStr.split(/[-\/]/);
-             dateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
-             dateField.value = dateStr;
-         }
-         else {
-             datespanEl.innerHTML = "ERROR: Expecting YYYY-MM-DD date format";
-             return false;
-         }
-      }
-
-      // Part 2: now that all seems to be YYYY-MM-DD format, validate MM&DD #s:
-      parts   = dateStr.split(/-/);
-      year    = parseInt(parts[0], 10);
-      month   = parseInt(parts[1], 10);
-      day     = parseInt(parts[2], 10);
-
-      if(month <= 0 || month > 12)
-      {
-          datespanEl.innerHTML = "ERROR: month does not validate for YYYY-MM-DD";
-          return false;
-      }
-
-      var monthLength = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
-
-      // Adjust for leap years
-      if(year % 400 == 0 || (year % 100 != 0 && year % 4 == 0))
-      {
-          monthLength[1] = 29;
-      }
-
-      if (day <= 0 || day > monthLength[month - 1]) {
-          datespanEl.innerHTML = "ERROR: day of month does not validate for YYYY-MM-DD";
-          return false;
-      }
-
-      return true;
+    $(function() {
+      $('#datetime-field').datetimepicker({
+      format: 'YYYY-MM-DD HH:mm',
+      showTodayButton: true,
+      showClear: true,
+      icons: {
+              today: 'todayText'
+          },
+      widgetPositioning:{
+              vertical: 'bottom'
+          }
+      })
     });
-  });
-
 
   var cascaded_branch_functions = [];
 
@@ -228,7 +163,7 @@ class FormBuilderJson(object):
   function ajaxFormSubmit(next_form_url,start_url){
     var form_fields = []
     dataString = '';
-    $(".field_input, .field_input_date").each(function(){
+    $(".field_input, .field_input_date, .field_input_time, .field_input_datetime").each(function(){
         var elem = $(this)
         var elem_type = elem.prop('type')
         if($.inArray(elem.attr("name"),form_fields)<0){
@@ -394,6 +329,7 @@ class FormBuilderJson(object):
 
 </script>
 
+
 ^form_header
 
 <table class="table table-bordered table-striped table-condensed">^table_rows</table>""")
@@ -515,10 +451,48 @@ class FormBuilderJson(object):
             if field.get('text_validation_type_or_show_slider_number') == 'date_ymd':
                 field_class="field_input_date form-control"
                 text_field_id="date"+text_field_id
-                today_button="""<input type="button" value="Today" class="todaybutton" id="datebtn_{0}" /> <br/>
-                             <span style="color:red" class="datespan" id="datespan_{0}"></span>""".format(field.get('field_name'))
-                return """<div class="date-field"><div class="input-group date"><input style="min-width: 100px;" type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} /><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span></div></div>{5}
-                        """.format(value, name, field_class, text_field_id, onchange, today_button)
+                return """<div class="date-field">
+                            <div class='col-sm-6'>
+                                <div class="form-group">
+                                    <div class='input-group date' id='date-field'>
+                                        <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
+                                        <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-calendar"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>""".format(value, name, field_class, text_field_id, onchange)
+            elif field.get('text_validation_type_or_show_slider_number') == 'time':
+                field_class="field_input_time form-control"
+                text_field_id="time"+text_field_id
+                return """<div class="time-field">
+                            <div class='col-sm-6'>
+                                <div class="form-group">
+                                    <div class='input-group date' id='time-field'>
+                                        <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
+                                        <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-time"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>""".format(value, name, field_class, text_field_id, onchange)
+            elif field.get('text_validation_type_or_show_slider_number') == 'datetime_ymd':
+                field_class="field_input_datetime form-control"
+                text_field_id="datetime"+text_field_id
+                return """<div class="datetime-field">
+                            <div class='col-sm-6'>
+                                <div class="form-group">
+                                    <div class='input-group date' id='datetime-field'>
+                                        <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
+                                        <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-calendar"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>""".format(value, name, field_class, text_field_id, onchange)
 
             return """<input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
                   """.format(value, name, field_class, text_field_id, onchange, today_button)
