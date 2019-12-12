@@ -17,7 +17,13 @@
 
 {% if error %}
 	<div class="alert alert-danger" role="alert">
-	  <strong>Warning!</strong> {{error}} Please contact the data coordinating center or <a href="mailto:eigsupport@email.chop.edu"> eigsupport@email.chop.edu </a> .
+	  <center><strong>Error!</strong> {{error}} </center>
+	</div>
+{% endif %}
+
+{% if warning %}
+	<div class="alert alert-danger" role="alert">
+	  <center><strong>Warning!</strong> {{error}} </center>
 	</div>
 {% endif %}
 	<br>
