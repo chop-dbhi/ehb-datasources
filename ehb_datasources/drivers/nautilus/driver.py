@@ -160,7 +160,7 @@ class ehbDriver(Driver, RequestHandler):
         except IndexError:
             if (response == '[]'):
                 log.error('Zero samples returned, This SDG does exist in Nautilus but it does not have any aliquots alligned to it.')
-                return {"warning": "Zero samples returned, This SDG does exist in Nautilus but it does not have any aliquots alligned to it. reach out to the BioRC if this is unexpected. <a href=\"mailto:BioRC@email.chop.edu\"> BioRC@email.chop.edu"}
+                return {"warning": "Zero samples returned, This SDG does exist in Nautilus but it does not have any aliquots aligned to it. reach out to the BioRC if this is unexpected. <a href=\"mailto:BioRC@email.chop.edu\"> BioRC@email.chop.edu"}
             else:
                 log.error('Error retrieving sample data.')
                 return {"error": "Unable to retrieve sample data. Please contact the data coordinating center or <a href=\"mailto:eigsupport@email.chop.edu\"> eigsupport@email.chop.edu"}
