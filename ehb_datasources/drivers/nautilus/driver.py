@@ -134,12 +134,22 @@ class ehbDriver(Driver, RequestHandler):
         if not full_path.endswith('/'):
             full_path += '/'
         full_path += '?name={sdg}'.format(sdg=kwargs.get('record_id'))
-        response = self.GET(full_path, headers, body).read().decode('utf-8')
+        response = self.GET(full_path, headers, body)
+        if (response.status != 200):
+            if (response.status == 401):
+                log.error('Error: Nautilus Authentication error')
+                return {"error": "Nautilus Authentication error. Please e-mail BioRC@email.chop.edu, EiGSupport@email.chop.edu and your research coordinator to resolve"}
+            elif(response.status == 404):
+                log.error('Error: SDG name {sdg} does not exist in Nautilus'.format(sdg=kwargs.get('record_id')))
+                return{"error": "SDG name {sdg} does not exist in Nautilus. Please e-mail BioRC@email.chop.edu if this SDG should exist.".format(sdg=kwargs.get('record_id'))}
+            else:
+                log.error('Error with Nautilus Webservice')
+                return {"error": "Error with Nautilus Webservice. Please e-mail BioRC@email.chop.edu, EiGSupport@email.chop.edu and your research coordinator to resolve"}
         try:
-            return json.loads(response)[0]
+            return json.loads(response.read().decode('utf-8'))[0]
         except KeyError:
             try:  # grab error number and process error
-                responseDict = json.loads(response)
+                responseDict = json.loads(response.read().decode('utf-8'))
                 status = responseDict['error']
                 errorMsg = self.NAU_ERROR_MAP.get(status, 'UNKNOWN ERROR')
                 log.error(errorMsg)
@@ -149,14 +159,14 @@ class ehbDriver(Driver, RequestHandler):
                 return {"error": "Unable to retrieve sample data."}
         except IndexError:
             if (response == '[]'):
-                log.error('Zero samples returned, validate user has access to protocol in nautilus.')
-                return {"error": "Zero samples returned, validate user has access to protocol in nautilus."}
+                log.error('Zero samples returned, This SDG does exist in Nautilus but it does not have any aliquots alligned to it.')
+                return {"warning": "Zero samples returned, This SDG does exist in Nautilus but it does not have any aliquots aligned to it. reach out to the BioRC if this is unexpected. <a href=\"mailto:BioRC@email.chop.edu\"> BioRC@email.chop.edu"}
             else:
-                log.error('Error retrieving sample data')
-                return {"error": "Unable to retrieve sample data."}
+                log.error('Error retrieving sample data.')
+                return {"error": "Unable to retrieve sample data. Please contact the data coordinating center or <a href=\"mailto:eigsupport@email.chop.edu\"> eigsupport@email.chop.edu"}
         except:
             log.error('Error retrieving sample data')
-            return {"error": "Unable to retrieve sample data."}
+            return {"error": "Unable to retrieve sample data. Please contact the data coordinating center or <a href=\"mailto:eigsupport@email.chop.edu\"> eigsupport@email.chop.edu"}
 
     def extract_aliquots(self, sample_data):
         aliquots = []
