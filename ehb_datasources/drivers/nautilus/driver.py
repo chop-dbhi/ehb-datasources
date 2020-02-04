@@ -220,7 +220,10 @@ class ehbDriver(Driver, RequestHandler):
             'PROT': 'Protein',
             'QC-GEL': 'QC Gel',
             'QC-Xpose': 'QC Xpose',
-            'QC-AGIL': 'QC Agilent'
+            'QC-AGIL': 'QC Agilent',
+            'STL': 'Stool',
+            'URN': 'Urine',
+            'URNCP': 'Urine Cell Pellet'
         }
         secondary_type_map = {
             'CELC': 'Cell Culture',
@@ -234,7 +237,7 @@ class ehbDriver(Driver, RequestHandler):
             'PAT': 'Paternal',
             'SUP': 'Supernant',
             'CELP': 'Cell Pellet',
-            'FFPE': 'FFPE',
+            'FFPE': 'FFPE'
         }
         for each in sample_data:
             try:

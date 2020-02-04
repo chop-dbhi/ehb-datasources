@@ -116,7 +116,7 @@ class FormBuilderJson(object):
 <script type="text/javascript">
 
     $(function() {
-    $('#date-field').datetimepicker({
+    $('.date-field .input-group.date').datetimepicker({
     format: 'YYYY-MM-DD',
     showTodayButton: true,
     showClear: true,
@@ -130,7 +130,7 @@ class FormBuilderJson(object):
     });
 
     $(function() {
-      $('#time-field').datetimepicker({
+      $('.time-field .input-group.date').datetimepicker({
       format: 'HH:mm',
       showTodayButton: true,
       showClear: true,
@@ -144,7 +144,7 @@ class FormBuilderJson(object):
     });
 
     $(function() {
-      $('#datetime-field').datetimepicker({
+      $('.datetime-field .input-group.date').datetimepicker({
       format: 'YYYY-MM-DD HH:mm',
       showTodayButton: true,
       showClear: true,
@@ -452,45 +452,33 @@ class FormBuilderJson(object):
                 field_class="field_input_date form-control"
                 text_field_id="date"+text_field_id
                 return """<div class="date-field">
-                            <div class='col-sm-6'>
-                                <div class="form-group">
-                                    <div class='input-group date' id='date-field'>
-                                        <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
-                                        <span class="input-group-addon">
-                                            <span class="glyphicon glyphicon-calendar"></span>
-                                        </span>
-                                    </div>
-                                </div>
+                            <div class='input-group date' id='date-field'>
+                                <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
                             </div>
                         </div>""".format(value, name, field_class, text_field_id, onchange)
             elif field.get('text_validation_type_or_show_slider_number') == 'time':
                 field_class="field_input_time form-control"
                 text_field_id="time"+text_field_id
                 return """<div class="time-field">
-                            <div class='col-sm-6'>
-                                <div class="form-group">
-                                    <div class='input-group date' id='time-field'>
-                                        <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
-                                        <span class="input-group-addon">
-                                            <span class="glyphicon glyphicon-time"></span>
-                                        </span>
-                                    </div>
-                                </div>
+                            <div class='input-group date' id='time-field'>
+                                <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-time"></span>
+                                </span>
                             </div>
                         </div>""".format(value, name, field_class, text_field_id, onchange)
             elif field.get('text_validation_type_or_show_slider_number') == 'datetime_ymd':
                 field_class="field_input_datetime form-control"
                 text_field_id="datetime"+text_field_id
                 return """<div class="datetime-field">
-                            <div class='col-sm-6'>
-                                <div class="form-group">
-                                    <div class='input-group date' id='datetime-field'>
-                                        <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
-                                        <span class="input-group-addon">
-                                            <span class="glyphicon glyphicon-calendar"></span>
-                                        </span>
-                                    </div>
-                                </div>
+                            <div class='input-group date' id='datetime-field'>
+                                <input type="text" value="{0}" name="{1}" class="{2}" id="{3}" {4} />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
                             </div>
                         </div>""".format(value, name, field_class, text_field_id, onchange)
 
