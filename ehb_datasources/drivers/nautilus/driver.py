@@ -195,6 +195,8 @@ class ehbDriver(Driver, RequestHandler):
         type_map = {
             'TISS': 'Tissue',
             'BLD': 'Blood',
+            'CBLD': 'Cord Blood',
+            'BLDFP': 'Blood Ficoll Pellet',
             'BMA': 'Bone Marrow Aspirate',
             'BMC': 'Bone Marrow Cells',
             'DNA': 'DNA',
