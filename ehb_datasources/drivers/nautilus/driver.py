@@ -146,8 +146,6 @@ class ehbDriver(Driver, RequestHandler):
                 log.error('Error: SDG name {sdg} could not be processed by Nautilus.'.format(sdg=kwargs.get('record_id')))
                 return{"error": "SDG name {sdg} could not be processed by Nautilus. Please e-mail EiGSupport@email.chop.edu and your research coordinator to resolve.".format(sdg=kwargs.get('record_id'))}
             else:
-                print("nautilus status")
-                print(response.status)
                 log.error('Error with Nautilus Webservice')
                 return {"error": "Error with Nautilus Webservice. Please e-mail BioRC@email.chop.edu, EiGSupport@email.chop.edu and your research coordinator to resolve"}
         try:
