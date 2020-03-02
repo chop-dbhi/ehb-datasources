@@ -142,7 +142,12 @@ class ehbDriver(Driver, RequestHandler):
             elif(response.status == 404):
                 log.error('Error: SDG name {sdg} does not exist in Nautilus'.format(sdg=kwargs.get('record_id')))
                 return{"error": "SDG name {sdg} does not exist in Nautilus. Please e-mail BioRC@email.chop.edu if this SDG should exist.".format(sdg=kwargs.get('record_id'))}
+            elif(response.status == 400):
+                log.error('Error: SDG name {sdg} could not be processed by Nautilus.'.format(sdg=kwargs.get('record_id')))
+                return{"error": "SDG name {sdg} could not be processed by Nautilus. Please e-mail EiGSupport@email.chop.edu and your research coordinator to resolve.".format(sdg=kwargs.get('record_id'))}
             else:
+                print("nautilus status")
+                print(response.status)
                 log.error('Error with Nautilus Webservice')
                 return {"error": "Error with Nautilus Webservice. Please e-mail BioRC@email.chop.edu, EiGSupport@email.chop.edu and your research coordinator to resolve"}
         try:
@@ -225,7 +230,7 @@ class ehbDriver(Driver, RequestHandler):
             'QC-AGIL': 'QC Agilent',
             'STL': 'Stool',
             'URN': 'Urine',
-            'URNCP': 'Urine Cell Pellet'
+            'URNCP': 'Urine Cell Pellet',
         }
         secondary_type_map = {
             'CELC': 'Cell Culture',
@@ -239,7 +244,7 @@ class ehbDriver(Driver, RequestHandler):
             'PAT': 'Paternal',
             'SUP': 'Supernant',
             'CELP': 'Cell Pellet',
-            'FFPE': 'FFPE'
+            'FFPE': 'FFPE',
         }
         for each in sample_data:
             try:
