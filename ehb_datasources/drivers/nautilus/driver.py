@@ -274,6 +274,8 @@ class ehbDriver(Driver, RequestHandler):
                     each['STATUS'] = '<p class="text-warning"><em>Disposed</em></p>'  # noqa
                 elif each['U_ALQ_STATUS'] == 'Virtual':
                     each['STATUS'] = '<p class="text-success"><em>Virtual</em></p>'
+                elif each['U_ALQ_STATUS'] == 'Shipped':
+                    each['STATUS'] = '<p class="text-success"><em>Shipped</em></p>'
                 else:
                     each['STATUS'] = '<p class="text-success"><em>Available</em></p>'  # noqa
                 each['is_received'] = True
