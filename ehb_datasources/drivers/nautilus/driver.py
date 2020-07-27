@@ -243,6 +243,9 @@ class ehbDriver(Driver, RequestHandler):
             'SUP': 'Supernant',
             'CELP': 'Cell Pellet',
             'FFPE': 'FFPE',
+            'PLACFS': 'PLACFS',
+            'PLACMS': 'PLACMS',
+            'PLACPY': 'PLACPY',
         }
         for each in sample_data:
             try:
