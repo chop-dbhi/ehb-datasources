@@ -246,6 +246,7 @@ class ehbDriver(Driver, RequestHandler):
             'PLACFS': 'PLACFS',
             'PLACMS': 'PLACMS',
             'PLACPY': 'PLACPY',
+            'Placenta': 'Placenta'
         }
         for each in sample_data:
             try:
