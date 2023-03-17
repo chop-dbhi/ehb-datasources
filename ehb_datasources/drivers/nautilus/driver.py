@@ -235,6 +235,7 @@ class ehbDriver(Driver, RequestHandler):
             'SUP': 'Supernant',
             'CELP': 'Cell Pellet',
             'FFPE': 'FFPE',
+            'EDTA' : "EDTA'
         }
         for each in sample_data:
             try:
