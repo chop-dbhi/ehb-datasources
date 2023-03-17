@@ -220,7 +220,9 @@ class ehbDriver(Driver, RequestHandler):
             'PROT': 'Protein',
             'QC-GEL': 'QC Gel',
             'QC-Xpose': 'QC Xpose',
-            'QC-AGIL': 'QC Agilent'
+            'QC-AGIL': 'QC Agilent',
+             'EDTA' : 'EDTA'
+
         }
         secondary_type_map = {
             'CELC': 'Cell Culture',
@@ -235,7 +237,7 @@ class ehbDriver(Driver, RequestHandler):
             'SUP': 'Supernant',
             'CELP': 'Cell Pellet',
             'FFPE': 'FFPE',
-            'EDTA' : "EDTA'
+            'EDTA' : 'EDTA'
         }
         for each in sample_data:
             try:
