@@ -229,6 +229,8 @@ class ehbDriver(Driver, RequestHandler):
             'STL': 'Stool',
             'URN': 'Urine',
             'URNCP': 'Urine Cell Pellet',
+            'CRYO': 'CRYO',
+            'EDTA': 'EDTA'
         }
         secondary_type_map = {
             'CELC': 'Cell Culture',
@@ -276,10 +278,6 @@ class ehbDriver(Driver, RequestHandler):
             elif each['STATUS'] == 'V' or each['STATUS'] == 'C' or each['STATUS'] == 'P':  # noqa
                 if each['U_DISPOSED'] == 'T':
                     each['STATUS'] = '<p class="text-warning"><em>Disposed</em></p>'  # noqa
-                elif each['U_ALQ_STATUS'] == 'Virtual':
-                    each['STATUS'] = '<p class="text-success"><em>Virtual</em></p>'
-                elif each['U_ALQ_STATUS'] == 'Shipped':
-                    each['STATUS'] = '<p class="text-success"><em>Shipped</em></p>'
                 else:
                     each['STATUS'] = '<p class="text-success"><em>Available</em></p>'  # noqa
                 each['is_received'] = True
